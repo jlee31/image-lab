@@ -1,6 +1,6 @@
 from processing import *
 from gui import *
-from utils.imports import *\
+from utils.imports import *
 
 # Main App
 ''' Things I want to Have

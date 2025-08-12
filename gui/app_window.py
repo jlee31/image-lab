@@ -13,7 +13,35 @@ from utils.utils import *
 class AppWindow:
     # * Initial Setup
     def __init__(self):
-        pass
+        self.app = tk.Tk()
+        self.app.title("Image Lab")
+        self.app.geometry("1000x700")
+
+        # Buttons and Frame
+
+        self.btn_frame = tk.Frame(self.app)
+        self.btn_frame.pack(pady=5)
+
+        self.effect_frame = tk.Frame(self.app)
+        self.effect_frame.pack(pady=5)
+
+        self.canvas_frame = tk.Frame(self.app)
+        self.canvas_frame.pack(pady=10)
+
+        self.canvas = tk.Canvas(self.canvas_frame, width=700, height=450, bg='gray90')
+        self.canvas.pack()
+
+        # Images
+        self.original_image = None
+        self.current_image = None
+        self.undo_stack = []
+        self.redo_stack = []
+
+        # Run
+        self.create_buttons()
+        self.create_effect_options()
+        self.app.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.app.mainloop()
 
 
     # * Tkinter Window Setup
@@ -35,4 +63,9 @@ class AppWindow:
         pass
 
     # * Image Editing / Functions 
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Are you sure you want to quit?"):
+            print("closed app")
+            self.app.destroy()
 
