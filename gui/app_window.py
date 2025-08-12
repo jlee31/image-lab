@@ -13,3 +13,8 @@ Managing the app’s main event loop.
 
 '''
 
+from imports import * 
+
+class AppWindow:
+    pass
+
