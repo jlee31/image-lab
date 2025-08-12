@@ -9,7 +9,7 @@ Encapsulating specific image operations like grayscale conversion, edge detectio
 
 Keeping the image processing logic independent from the GUI.
 '''
-from imports import * 
+from utils.imports import * 
 
 def adjust_brightness(image):
     pass

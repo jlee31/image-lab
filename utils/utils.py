@@ -1,4 +1,4 @@
-from imports import *
+from utils.imports import *
 
 def load_image_via_dialog():
     image = filedialog.askopenfilename(
