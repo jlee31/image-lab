@@ -148,65 +148,76 @@ class AppWindow:
     def adjust_brightness(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = adjust_brightness(self.current_image)
         self.show_image(self.current_image)
 
     def adjust_contrast(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = adjust_contrast(self.current_image)
         self.show_image(self.current_image)
 
     def adjust_saturation(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = adjust_saturation(self.current_image)
         self.show_image(self.current_image)
 
     def apply_glitch(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_glitch(self.current_image)
         self.show_image(self.current_image)
 
     def apply_blur(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_blur(self.current_image)
         self.show_image(self.current_image)
 
     def apply_sharpen(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_sharpen(self.current_image)
         self.show_image(self.current_image)
 
     def apply_pixels(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_pixels(self.current_image)
         self.show_image(self.current_image)
 
     def apply_invert(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_invert(self.current_image)
         self.show_image(self.current_image)
 
     def apply_noise(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_noise(self.current_image)
         self.show_image(self.current_image)
 
     def apply_vignette(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_vignette(self.current_image)
         self.show_image(self.current_image)
 
     def apply_retro_filter(self):
         if not check_image_loaded(self.current_image):
             return
+        self.add_to_undo_stack()
         self.current_image = apply_retro_filter(self.current_image)
         self.show_image(self.current_image)
