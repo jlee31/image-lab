@@ -10,27 +10,31 @@ Managing the app’s main event loop.
 from utils.imports import * 
 from utils.utils import *
 from processing.image_filters import *
+from utils.customMessageBox import ctk_messagebox
 
 class AppWindow:
     # * Initial Setup
     def __init__(self):
-        self.app = tk.Tk()
+        ctk.set_appearance_mode("System")  # Optional: light/dark mode
+        ctk.set_default_color_theme("blue")  # Optional: theme color
+
+        self.app = ctk.CTk()
         self.app.title("Image Lab")
         self.app.geometry("1000x700")
 
         # Buttons and Frame
 
-        self.effect_frame = tk.Frame(self.app)
-        self.effect_frame.pack(pady=(20,5))
+        self.effect_frame = ctk.CTkFrame(self.app)
+        self.effect_frame.pack(pady=(20,5), fill="x")
 
-        self.canvas_frame = tk.Frame(self.app)
+        self.canvas_frame = ctk.CTkFrame(self.app)
         self.canvas_frame.pack(pady=10)
 
-        self.canvas = tk.Canvas(self.canvas_frame, width=700, height=450, bg='gray90')
+        self.canvas = tk.Canvas(self.canvas_frame, width=700, height=450, bg='#222222', highlightthickness=0)
         self.canvas.pack()
 
-        self.btn_frame = tk.Frame(self.app)
-        self.btn_frame.pack(pady=10)
+        self.btn_frame = ctk.CTkFrame(self.app)
+        self.btn_frame.pack(pady=10, fill="x")
 
         # Images
         self.original_image = None
@@ -56,7 +60,7 @@ class AppWindow:
         ]
      
         for text, command in buttons:
-            button = tk.Button(self.btn_frame, text=text, command=command)
+            button = ctk.CTkButton(self.btn_frame, text=text, command=command)
             button.pack(padx=3, side=tk.LEFT)
 
     def create_effect_options(self):
@@ -80,7 +84,7 @@ class AppWindow:
         ]
 
         for text, command in effects:
-            button = tk.Button(self.effect_frame, text=text, command=command)
+            button = ctk.CTkButton(self.effect_frame, text=text, command=command)
             button.pack(side=tk.LEFT, padx=3)
 
     # * Image  
@@ -96,7 +100,8 @@ class AppWindow:
 
     def save_image(self):
         if self.current_image is None:
-            messagebox.showerror("Error", "Please select an Image first")
+            # messagebox.showerror("Error", "Please select an Image first")
+            ctk_messagebox(title="Error", message="Please select an Image first")
             return
         save_image_via_dialog(self.current_image)
 
