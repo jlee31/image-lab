@@ -9,6 +9,7 @@ Managing the app’s main event loop.
 
 from utils.imports import * 
 from utils.utils import *
+from processing.image_filters import *
 
 class AppWindow:
     # * Initial Setup
@@ -48,7 +49,6 @@ class AppWindow:
     def create_buttons(self):
         buttons = [
             ("Load Image", self.load_image),
-            # ("Apply Effect", self.apply_effect),
             ("Save Image", self.save_image),
             ("Undo", self.undo_image),
             ("Redo", self.redo_image),
@@ -60,22 +60,23 @@ class AppWindow:
             button.pack(padx=3, side=tk.LEFT)
 
     def create_effect_options(self):
-        # effects = [
-        #     ("Brightness", self.adjust_brightness),
-        #     ("Contrast", self.adjust_contrast),
-        #     ("Saturation", self.adjust_saturation),
-        #     ("Blur", self.apply_blur),
-        #     ("Sharpen", self.apply_sharpen),
-        #     ("Pixilate", self.apply_pixels),
-        #     ("Invert Colors", self.apply_invert),
-        #     ("Add Noise", self.apply_noise),
-        #     ("Vignette", self.apply_vignette),
-        #     ("Retro Filter", self.apply_retro_filter)
-        # ]
-        pass
-        # for text, command in effects:
-        #     button = tk.Button(self.effect_frame, text=text, command=command)
-        #     button.pack(side=tk.LEFT, padx=3)
+        effects = [
+            ("Brightness", self.adjust_brightness),
+            ("Contrast", self.adjust_contrast),
+            ("Saturation", self.adjust_saturation),
+            ("Glitch", self.apply_glitch),
+            ("Blur", self.apply_blur),
+            ("Sharpen", self.apply_sharpen),
+            ("Pixilate", self.apply_pixels),
+            ("Invert Colors", self.apply_invert),
+            ("Add Noise", self.apply_noise),
+            ("Vignette", self.apply_vignette),
+            ("Retro Filter", self.apply_retro_filter)
+        ]
+
+        for text, command in effects:
+            button = tk.Button(self.effect_frame, text=text, command=command)
+            button.pack(side=tk.LEFT, padx=3)
 
     # * Image  
 
@@ -142,3 +143,70 @@ class AppWindow:
             print("closed app")
             self.app.destroy()
 
+    # image editing functions
+
+    def adjust_brightness(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = adjust_brightness(self.current_image)
+        self.show_image(self.current_image)
+
+    def adjust_contrast(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = adjust_contrast(self.current_image)
+        self.show_image(self.current_image)
+
+    def adjust_saturation(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = adjust_saturation(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_glitch(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_glitch(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_blur(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_blur(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_sharpen(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_sharpen(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_pixels(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_pixels(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_invert(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_invert(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_noise(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_noise(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_vignette(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_vignette(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_retro_filter(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.current_image = apply_retro_filter(self.current_image)
+        self.show_image(self.current_image)
