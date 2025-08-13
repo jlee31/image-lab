@@ -30,7 +30,14 @@ class AppWindow:
         self.canvas_frame = ctk.CTkFrame(self.app)
         self.canvas_frame.pack(pady=10)
 
-        self.canvas = tk.Canvas(self.canvas_frame, width=700, height=450, bg='#222222', highlightthickness=0)
+        self.canvas = tk.Canvas(
+            self.canvas_frame,
+            width=700,
+            height=450,
+            bg='#222222',
+            highlightthickness=2,
+            highlightbackground='white'
+        )
         self.canvas.pack()
 
         self.btn_frame = ctk.CTkFrame(self.app)
@@ -100,14 +107,13 @@ class AppWindow:
 
     def save_image(self):
         if self.current_image is None:
-            # messagebox.showerror("Error", "Please select an Image first")
             ctk_messagebox(title="Error", message="Please select an Image first")
             return
         save_image_via_dialog(self.current_image)
 
     def reset_image(self):
         if self.current_image is None:
-            messagebox.showerror("Error", "No Image to Reset")
+            ctk_messagebox(title="Error", message="No Image to Reset")
             return
         self.add_to_undo_stack()
         self.current_image = self.original_image.copy()
@@ -120,7 +126,7 @@ class AppWindow:
             self.current_image = self.undo_stack.pop()
             self.show_image(self.current_image)
         else:
-            messagebox.showerror("Error", "Stil the original image")
+            ctk_messagebox(title="Error", message="Still the original image")
 
     def add_to_undo_stack(self):
         self.undo_stack.append(self.current_image)
@@ -133,7 +139,8 @@ class AppWindow:
             self.current_image = self.undo_stack.pop()
             self.show_image(self.current_image)
         else:
-            messagebox.showerror("Error", "Stil the original image")
+            ctk_messagebox(title="Error", message="Still the original image")
+            
 
     # * Image Editing / Functions 
 
