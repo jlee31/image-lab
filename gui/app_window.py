@@ -71,7 +71,12 @@ class AppWindow:
             ("Invert Colors", self.apply_invert),
             ("Add Noise", self.apply_noise),
             ("Vignette", self.apply_vignette),
-            ("Retro Filter", self.apply_retro_filter)
+            ("Retro Filter", self.apply_retro_filter),
+            # ("Pencil Sketch", self.apply_pencil),
+            # Thermal Camera
+            # Face Swap if face detection
+            # Gamma Correct
+            # Sepia tone
         ]
 
         for text, command in effects:
