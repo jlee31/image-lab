@@ -20,17 +20,17 @@ class AppWindow:
 
         # Buttons and Frame
 
-        self.btn_frame = tk.Frame(self.app)
-        self.btn_frame.pack(pady=5)
-
         self.effect_frame = tk.Frame(self.app)
-        self.effect_frame.pack(pady=5)
+        self.effect_frame.pack(pady=(20,5))
 
         self.canvas_frame = tk.Frame(self.app)
         self.canvas_frame.pack(pady=10)
 
         self.canvas = tk.Canvas(self.canvas_frame, width=700, height=450, bg='gray90')
         self.canvas.pack()
+
+        self.btn_frame = tk.Frame(self.app)
+        self.btn_frame.pack(pady=10)
 
         # Images
         self.original_image = None
