@@ -11,8 +11,10 @@ Keeping the image processing logic independent from the GUI.
 '''
 from utils.imports import * 
 
+# all functions will return an adjusted image
 def adjust_brightness(image):
-    pass
+    print("Adjusting Brightness")
+    return image
 
 def adjust_saturation(image):
     pass
