@@ -1,23 +1,20 @@
 from .imports import *
 
 def load_image_via_dialog():
-    image = filedialog.askopenfilename(
+    file_path = filedialog.askopenfilename(
         filetypes=[
             ("JPEG files", "*.jpg;*.jpeg"),
             ("PNG files", "*.png"),
             ("GIF files", "*.gif"),
             ("All files", "*.*")
         ])
-    if image:
-        return image
+    if file_path:
+        return file_path
     else:
         messagebox.ERROR("Error", "Please pick a valid image")
         return 
     
 def save_image_via_dialog(image):
-    if image is None:
-        messagebox.showerror("Error", "Please select an Image first")
-        return
     file_path = filedialog.asksaveasfilename(
         defaultextension=".png",
         filetypes=[("PNG files", "*.png"),

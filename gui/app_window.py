@@ -46,23 +46,96 @@ class AppWindow:
 
     # * Tkinter Window Setup
     def create_buttons(self):
-        pass
+        buttons = [
+            ("Load Image", self.load_image),
+            # ("Apply Effect", self.apply_effect),
+            ("Save Image", self.save_image),
+            ("Undo", self.undo_image),
+            ("Redo", self.redo_image),
+            ("Reset", self.reset_image)
+        ]
+     
+        for text, command in buttons:
+            button = tk.Button(self.btn_frame, text=text, command=command)
+            button.pack(padx=3, side=tk.LEFT)
 
     def create_effect_options(self):
+        # effects = [
+        #     ("Brightness", self.adjust_brightness),
+        #     ("Contrast", self.adjust_contrast),
+        #     ("Saturation", self.adjust_saturation),
+        #     ("Blur", self.apply_blur),
+        #     ("Sharpen", self.apply_sharpen),
+        #     ("Pixilate", self.apply_pixels),
+        #     ("Invert Colors", self.apply_invert),
+        #     ("Add Noise", self.apply_noise),
+        #     ("Vignette", self.apply_vignette),
+        #     ("Retro Filter", self.apply_retro_filter)
+        # ]
         pass
+        # for text, command in effects:
+        #     button = tk.Button(self.effect_frame, text=text, command=command)
+        #     button.pack(side=tk.LEFT, padx=3)
 
     # * Image  
 
+    def load_image(self):
+        file_path = load_image_via_dialog()
+        if file_path:
+            self.original_image = cv.imread(filename=file_path)
+            self.current_image = self.original_image.copy()
+            self.show_image(self.current_image)
+            self.undo_stack.clear()
+            self.redo_stack.clear()
+
+    def save_image(self):
+        if self.current_image is None:
+            messagebox.showerror("Error", "Please select an Image first")
+            return
+        save_image_via_dialog(self.current_image)
+
     def reset_image(self):
-        pass
+        if self.current_image is None:
+            messagebox.showerror("Error", "No Image to Reset")
+            return
+        self.add_to_undo_stack()
+        self.current_image = self.original_image.copy()
+        self.show_image(self.current_image)
 
     def undo_image(self):
-        pass
+        print("Trying to undo")
+        if len(self.undo_stack) > 0:
+            self.redo_stack.append(self.current_image.copy())
+            self.current_image = self.undo_stack.pop()
+            self.show_image(self.current_image)
+        else:
+            messagebox.showerror("Error", "Stil the original image")
+
+    def add_to_undo_stack(self):
+        self.undo_stack.append(self.current_image)
+        self.redo_stack.clear()
 
     def redo_image(self):
-        pass
+        print("Trying to Redo")
+        if len(self.redo_stack) > 0:
+            self.undo_stack.append(self.current_image.copy())
+            self.current_image = self.undo_stack.pop()
+            self.show_image(self.current_image)
+        else:
+            messagebox.showerror("Error", "Stil the original image")
 
     # * Image Editing / Functions 
+
+    def show_image(self, image):
+        image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+        image_gray = cv.cvtColor(image_rgb, cv.COLOR_RGB2GRAY)
+        image_pil = Image.fromarray(image_rgb)
+        image_pil = image_pil.resize((700,450), Image.LANCZOS)
+        image_tk = ImageTk.PhotoImage(image=image_pil)
+
+        self.canvas.delete("all") 
+        self.canvas.create_image(0,0, anchor='nw', image=image_tk)
+        self.canvas.image_tk = image_tk
 
     def on_closing(self):
         if messagebox.askokcancel("Quit", "Are you sure you want to quit?"):
