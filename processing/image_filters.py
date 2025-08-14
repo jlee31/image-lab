@@ -142,4 +142,25 @@ def apply_retro_filter(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
+    image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
+    r,g,b = image_pil.split()
+    r = r.point(lambda i: i * 1.3)
+    b = b.point(lambda i: i * 0.8)
+    image_pil = Image.merge('RGB', (r,g,b))
+    enhancer = ImageEnhance.Contrast(image_pil)
+    image_pil = enhancer.enhance(1.2)
+    newImage = cv.cvtColor(np.array(image_pil), cv.COLOR_RGB2BGR)
+    return newImage
+
+def apply_pencil(image):
+    if not check_image_loaded(image):
+            return
+    newImage = image.copy()
+    gray = cv.cvtColor(newImage, cv.COLOR_BGR2GRAY)
+    inverted = cv.bitwise_not(gray)
+    blurred = cv.GaussianBlur(inverted, (21,21), sigmaX=0, sigmaY=0)
+    inverted_blur = cv.bitwise_not(blurred)
+    sketch = cv.divide(gray, inverted_blur, scale = 256)
+    return sketch
+
 
