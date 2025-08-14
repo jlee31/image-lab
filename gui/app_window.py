@@ -20,28 +20,39 @@ class AppWindow:
 
         self.app = ctk.CTk()
         self.app.title("Image Lab")
-        self.app.geometry("1000x700")
+        self.app.geometry("1000x700")  # Optional: keep or remove
+        self.app.minsize(800, 600)     # Optional: set minimum size
+        self.app.rowconfigure(0, weight=1)
+        self.app.columnconfigure(0, weight=1)
 
+        # MAIN FRAME (fills window)
+        self.main_frame = ctk.CTkFrame(self.app)
+        self.main_frame.grid(row=0, column=0, sticky="nsew")  # Use grid to fill window
+        self.main_frame.rowconfigure(0, weight=1)
+        self.main_frame.columnconfigure((0, 1, 2), weight=1)  # 3 columns: left, center, right
+        
         # Buttons and Frame
+        # LEFT BUTTONS
+        self.btn_frame = ctk.CTkFrame(self.main_frame)
+        self.btn_frame.grid(row=0, column=0, sticky="ns", padx=5, pady=5)    
 
-        self.effect_frame = ctk.CTkFrame(self.app)
-        self.effect_frame.pack(pady=(20,5), fill="x")
-
-        self.canvas_frame = ctk.CTkFrame(self.app)
-        self.canvas_frame.pack(pady=10)
+        # CENTER BUTTONS
+        self.canvas_frame = ctk.CTkFrame(self.main_frame)
+        self.canvas_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        self.canvas_frame.rowconfigure(0, weight=1)
+        self.canvas_frame.columnconfigure(0, weight=1)
 
         self.canvas = tk.Canvas(
             self.canvas_frame,
-            width=700,
-            height=450,
             bg='#222222',
             highlightthickness=2,
             highlightbackground='white'
         )
-        self.canvas.pack()
+        self.canvas.grid(row=0, column=0, sticky="nsew")
 
-        self.btn_frame = ctk.CTkFrame(self.app)
-        self.btn_frame.pack(pady=10, fill="x")
+        # RIGHT BUTTONS
+        self.effect_frame = ctk.CTkFrame(self.main_frame)
+        self.effect_frame.grid(row=0, column=2, sticky="ns", padx=5, pady=5)
 
         # Images
         self.original_image = None
@@ -68,7 +79,7 @@ class AppWindow:
      
         for text, command in buttons:
             button = ctk.CTkButton(self.btn_frame, text=text, command=command)
-            button.pack(padx=3, side=tk.LEFT)
+            button.pack(pady=3, side=tk.TOP)
 
     def create_effect_options(self):
         effects = [
@@ -92,7 +103,7 @@ class AppWindow:
 
         for text, command in effects:
             button = ctk.CTkButton(self.effect_frame, text=text, command=command)
-            button.pack(side=tk.LEFT, padx=3)
+            button.pack(side=tk.TOP, pady=3)
 
     # * Image  
 
