@@ -20,15 +20,21 @@ class AppWindow:
 
         self.app = ctk.CTk()
         self.app.title("Image Lab")
-        self.app.geometry("1000x700")
+        self.app.geometry("1000x500")
 
         # Buttons and Frame
+        # Left Buttons
+        self.btn_frame = ctk.CTkFrame(self.app)
+        self.btn_frame.pack(side=tk.LEFT, fill="y", padx=10, pady=10)
 
-        self.effect_frame = ctk.CTkFrame(self.app)
-        self.effect_frame.pack(pady=(20,5), fill="x")
-
+        # Center
         self.canvas_frame = ctk.CTkFrame(self.app)
-        self.canvas_frame.pack(pady=10)
+        self.canvas_frame.pack(side=tk.LEFT, expand=True, fill="both", padx=10, pady=10)
+
+        # Spacer frame on top
+        self.top_spacer = ctk.CTkFrame(self.canvas_frame, height=50)
+        self.top_spacer.pack(side=tk.TOP, fill='x')
+        self.top_spacer.configure(fg_color='#302c2c')
 
         self.canvas = tk.Canvas(
             self.canvas_frame,
@@ -38,10 +44,17 @@ class AppWindow:
             highlightthickness=2,
             highlightbackground='white'
         )
-        self.canvas.pack()
+        self.canvas.pack(expand=True)
+        # self.canvas.configure(fg_color='#302c2c')
+        
+        # Spacer frame below
+        self.bottom_spacer = ctk.CTkFrame(self.canvas_frame)
+        self.bottom_spacer.pack(side=tk.TOP, expand=True, fill="both")
+        self.bottom_spacer.configure(fg_color='#302c2c')
 
-        self.btn_frame = ctk.CTkFrame(self.app)
-        self.btn_frame.pack(pady=10, fill="x")
+        # Right Buttons
+        self.effect_frame = ctk.CTkFrame(self.app)
+        self.effect_frame.pack(side=tk.LEFT, fill="y", padx=10, pady=10)
 
         # Images
         self.original_image = None
@@ -68,7 +81,7 @@ class AppWindow:
      
         for text, command in buttons:
             button = ctk.CTkButton(self.btn_frame, text=text, command=command)
-            button.pack(padx=3, side=tk.LEFT)
+            button.pack(pady=5, side=tk.TOP)
 
     def create_effect_options(self):
         effects = [
@@ -92,7 +105,7 @@ class AppWindow:
 
         for text, command in effects:
             button = ctk.CTkButton(self.effect_frame, text=text, command=command)
-            button.pack(side=tk.LEFT, padx=3)
+            button.pack(side=tk.TOP, pady=3)
 
     # * Image  
 
