@@ -96,7 +96,7 @@ class AppWindow:
             ("Add Noise", self.apply_noise),
             ("Vignette", self.apply_vignette),
             ("Retro Filter", self.apply_retro_filter),
-            # ("Pencil Sketch", self.apply_pencil),
+            ("Pencil Sketch", self.apply_pencil)
             # Thermal Camera
             # Face Swap if face detection
             # Gamma Correct
@@ -250,4 +250,11 @@ class AppWindow:
             return
         self.add_to_undo_stack()
         self.current_image = apply_retro_filter(self.current_image)
+        self.show_image(self.current_image)
+
+    def apply_pencil(self):
+        if not check_image_loaded(self.current_image):
+            return
+        self.add_to_undo_stack()
+        self.current_image = apply_pencil(self.current_image)
         self.show_image(self.current_image)
