@@ -126,6 +126,17 @@ def apply_vignette(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
+    vignette_intensity = simpledialog.askfloat("Input", "Enter Vignette Intensity (0.0 to 1.0)", minvalue=0.0, maxvalue=1.0)
+    if vignette_intensity:
+          rows, cols = newImage.shape[:2]
+          kernel_x = cv.getGaussianKernel(cols, cols / 2)
+          kernel_y = cv.getGaussianKernel(rows, rows / 2)
+          kernel = kernel_y * kernel_x.T
+          mask = 255 * kernel / ( 1 - vignette_intensity)
+          mask = mask * vignette_intensity + (1 - vignette_intensity)
+          newImage = newImage * mask[:,:,np.newaxis]
+          newImage = np.clip(newImage, 0, 255).astype(np.uint8)
+    return newImage
 
 def apply_retro_filter(image):
     if not check_image_loaded(image):
