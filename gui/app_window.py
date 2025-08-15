@@ -11,30 +11,42 @@ from utils.imports import *
 from utils.utils import *
 from processing.image_filters import *
 from utils.customMessageBox import ctk_messagebox
+import os
+
+
+current_dir = os.path.dirname(__file__)  # this gets the folder where your script is
+theme_path = os.path.join(current_dir, '..', 'assets', 'theme.json')
 
 class AppWindow:
     # * Initial Setup
     def __init__(self):
-        ctk.set_appearance_mode("System")  # Optional: light/dark mode
-        ctk.set_default_color_theme("blue")  # Optional: theme color
+        ctk.set_appearance_mode("System")  
+        ctk.set_default_color_theme(theme_path)  
 
         self.app = ctk.CTk()
         self.app.title("Image Lab")
         self.app.geometry("1000x500")
 
+        self.tabview = ctk.CTkTabview(master=self.app)
+        self.tabview.pack()
+
+        self.tabview.add("Photo Editor")  # add tab at the end
+        self.tabview.add("Settings")  # add tab at the end
+        self.tabview.set("Photo Editor")  # set currently visible tab
+
         # Buttons and Frame
         # Left Buttons
-        self.btn_frame = ctk.CTkFrame(self.app)
+        self.btn_frame = ctk.CTkFrame(self.tabview.tab("Photo Editor"))
         self.btn_frame.pack(side=tk.LEFT, fill="y", padx=10, pady=10)
 
         # Center
-        self.canvas_frame = ctk.CTkFrame(self.app)
+        self.canvas_frame = ctk.CTkFrame(self.tabview.tab("Photo Editor"))
         self.canvas_frame.pack(side=tk.LEFT, expand=True, fill="both", padx=10, pady=10)
 
         # Spacer frame on top
         self.top_spacer = ctk.CTkFrame(self.canvas_frame, height=50)
         self.top_spacer.pack(side=tk.TOP, fill='x')
-        self.top_spacer.configure(fg_color='#302c2c')
+        # self.top_spacer.configure(fg_color='#302c2c')
 
         self.canvas = tk.Canvas(
             self.canvas_frame,
@@ -50,10 +62,10 @@ class AppWindow:
         # Spacer frame below
         self.bottom_spacer = ctk.CTkFrame(self.canvas_frame)
         self.bottom_spacer.pack(side=tk.TOP, expand=True, fill="both")
-        self.bottom_spacer.configure(fg_color='#302c2c')
+        # self.bottom_spacer.configure(fg_color='#302c2c')
 
         # Right Buttons
-        self.effect_frame = ctk.CTkFrame(self.app)
+        self.effect_frame = ctk.CTkFrame(self.tabview.tab("Photo Editor"))
         self.effect_frame.pack(side=tk.LEFT, fill="y", padx=10, pady=10)
 
         # Images
@@ -82,6 +94,13 @@ class AppWindow:
         for text, command in buttons:
             button = ctk.CTkButton(self.btn_frame, text=text, command=command)
             button.pack(pady=5, side=tk.TOP)
+
+        # Tutorial Button
+        tut_button = ctk.CTkButton(self.btn_frame, text="Tutorial", command=self.open_tutorial)
+        tut_button.pack(pady=5, side=tk.TOP)
+
+    def open_tutorial(self):
+        pass
 
     def create_effect_options(self):
         effects = [
