@@ -11,6 +11,7 @@ Keeping the image processing logic independent from the GUI.
 '''
 from utils.imports import * 
 from utils.utils import * 
+from utils.customMessageBox import *
 from PIL import ImageEnhance
 
 # all functions will return an adjusted image
@@ -19,7 +20,8 @@ def adjust_brightness(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    brightness_factor = simpledialog.askfloat("Input", "Enter Brightness Factor (0.0 to 2.0)", minvalue=0.0, maxvalue=2.0)
+    # brightness_factor = simpledialog.askfloat("Input", "Enter Brightness Factor (0.0 to 2.0)", minvalue=0.0, maxvalue=2.0)
+    brightness_factor = ctk_get_value(input="Enter Brightness Factor (0.0 to 2.0)",minvalue=0.0, maxvalue=2.0, type=float)
     if brightness_factor:
         image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
         enhancer = ImageEnhance.Brightness(image_pil)
@@ -32,7 +34,8 @@ def adjust_saturation(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    saturation_factor = simpledialog.askfloat("Input", "Enter Saturation Factor (0.0 to 2.0)", minvalue=0.0, maxvalue=2.0)
+    # saturation_factor = simpledialog.askfloat("Input", "Enter Saturation Factor (0.0 to 2.0)", minvalue=0.0, maxvalue=2.0)
+    saturation_factor = ctk_get_value(input="Enter Saturation Factor (0.0 to 2.0)",minvalue=0.0, maxvalue=2.0, type=float)
     if saturation_factor:
         image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
         enhancer = ImageEnhance.Color(image_pil)
@@ -45,11 +48,12 @@ def adjust_contrast(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    saturation_factor = simpledialog.askfloat("Input", "Enter Contrast Factor (0.0 to 2.0)", minvalue=0.0, maxvalue=2.0)
-    if saturation_factor:
+    # saturation_factor = simpledialog.askfloat("Input", "Enter Contrast Factor (0.0 to 2.0)", minvalue=0.0, maxvalue=2.0)
+    contrast_factor = ctk_get_value(input="Enter Contrast Factor (0.0 to 2.0)",minvalue=0.0, maxvalue=2.0, type=float)
+    if contrast_factor:
         image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
         enhancer = ImageEnhance.Contrast(image_pil)
-        enhanced_image = enhancer.enhance(saturation_factor)
+        enhanced_image = enhancer.enhance(contrast_factor)
         new_image = cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
     return new_image
 
@@ -58,7 +62,8 @@ def apply_glitch(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    glitch_factor = simpledialog.askinteger("Input", "Enter Glitch Intensity (1 - 50)", minvalue=1, maxvalue=50)
+    # glitch_factor = simpledialog.askinteger("Input", "Enter Glitch Intensity (1 - 50)", minvalue=1, maxvalue=50)
+    glitch_factor = ctk_get_value(input="Enter Glitch Intensity (1 - 50)",minvalue=1, maxvalue=50, type=int)
     height, width, _ = newImage.shape
     for i in range(glitch_factor):
          offset = np.random.randint(-10, 11, size=3)
@@ -72,7 +77,8 @@ def apply_blur(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    blur_factor = simpledialog.askfloat("Input", "Enter Blur Factor (1 to 10)", minvalue=1, maxvalue=10)
+    # blur_factor = simpledialog.askfloat("Input", "Enter Blur Factor (1 to 10)", minvalue=1, maxvalue=10)
+    blur_factor = ctk_get_value(input="Enter Blur Factor (1 to 10)",minvalue=1, maxvalue=10, type=int)
     if blur_factor:
         image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
         blurred_image = image_pil.filter(ImageFilter.GaussianBlur(radius=blur_factor))
@@ -95,7 +101,8 @@ def apply_pixels(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    pixel_factor = simpledialog.askfloat("Input", "Enter Pixel Factor (From 2 to 50)", minvalue=2, maxvalue=50)
+    # pixel_factor = simpledialog.askfloat("Input", "Enter Pixel Factor (From 2 to 50)", minvalue=2, maxvalue=50)
+    pixel_factor = ctk_get_value(input="Enter Pixel Factor (From 2 to 50)", minvalue=2, maxvalue=50, type=int)
     if pixel_factor:
         height, width = newImage.shape[:2]
         small = cv.resize(newImage, (width // pixel_factor, height // pixel_factor), interpolation=cv.INTER_LINEAR)
@@ -115,7 +122,8 @@ def apply_noise(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    noise_factor = simpledialog.askfloat("Input", "Enter Noise Factor (From 0 to 1)", minvalue=0.0, maxvalue=1.0)
+    # noise_factor = simpledialog.askfloat("Input", "Enter Noise Factor (From 0 to 1)", minvalue=0.0, maxvalue=1.0)
+    noise_factor = ctk_get_value(input="Enter Noise Factor (From 0 to 1)", minvalue=0.0, maxvalue=1.0, type=float)
     if noise_factor is not None:
         noise = np.random.randint(0,noise_factor, newImage.shape, dtype=np.uint8)
         newImage = cv.add(newImage, noise)
@@ -126,7 +134,8 @@ def apply_vignette(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    vignette_intensity = simpledialog.askfloat("Input", "Enter Vignette Intensity (0.0 to 1.0)", minvalue=0.0, maxvalue=1.0)
+    # vignette_intensity = simpledialog.askfloat("Input", "Enter Vignette Intensity (0.0 to 1.0)", minvalue=0.0, maxvalue=1.0)
+    vignette_intensity = ctk_get_value(input="Enter Vignette Intensity (0.0 to 1.0)", minvalue=0.0, maxvalue=1.0, type=float)
     if vignette_intensity:
           rows, cols = newImage.shape[:2]
           kernel_x = cv.getGaussianKernel(cols, cols / 2)
