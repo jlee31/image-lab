@@ -14,18 +14,40 @@ from utils.customMessageBox import ctk_messagebox
 import os
 
 
-current_dir = os.path.dirname(__file__)  # this gets the folder where your script is
+# Fix theme path for macOS compatibility
+current_dir = os.path.dirname(os.path.abspath(__file__))  # Get absolute path
 theme_path = os.path.join(current_dir, '..', 'assets', 'theme.json')
+# Ensure the path is absolute and exists
+theme_path = os.path.abspath(theme_path)
 
 class AppWindow:
     # * Initial Setup
     def __init__(self):
         ctk.set_appearance_mode("System")  
-        ctk.set_default_color_theme(theme_path)  
+        
+        # Add error handling for theme loading on macOS
+        try:
+            if os.path.exists(theme_path):
+                ctk.set_default_color_theme(theme_path)
+            else:
+                print(f"Theme file not found at: {theme_path}")
+                # Fall back to default theme
+                ctk.set_default_color_theme("blue")
+        except Exception as e:
+            print(f"Error loading theme: {e}")
+            # Fall back to default theme
+            ctk.set_default_color_theme("blue")
 
         self.app = ctk.CTk()
         self.app.title("Image Lab")
         self.app.geometry("1000x500")
+
+        # macOS-specific window configuration
+        if hasattr(self.app, '_set_appearance_mode'):
+            try:
+                self.app._set_appearance_mode("System")
+            except:
+                pass
 
         self.tabview = ctk.CTkTabview(master=self.app)
         self.tabview.pack()
