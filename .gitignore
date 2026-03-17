@@ -77,3 +77,8 @@ run_macos.sh
 
 # But keep the theme file
 !assets/theme.json
+
+# Joe stuff
+/screenshots
+DEVNOTES.md
+plan.md

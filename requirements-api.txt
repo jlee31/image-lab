@@ -1,0 +1,8 @@
+# ── FastAPI backend ───────────────────────────────────────────────────────────
+# Install on top of requirements.txt:  pip install -r requirements-api.txt
+
+-r requirements.txt
+
+fastapi
+uvicorn[standard]
+python-multipart   # required for file upload endpoints
