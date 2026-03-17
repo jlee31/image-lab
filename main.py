@@ -1,6 +1,4 @@
-from processing import *
-from gui import *
-from utils.imports import *
+from gui.app_window import AppWindow
 
 # Main App
 

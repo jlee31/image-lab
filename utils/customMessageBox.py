@@ -15,7 +15,7 @@ def ctk_messagebox(title, message):
     ok_button = ctk.CTkButton(popup, text="OK", command=close)
     ok_button.pack(pady=(0, 20))
 
-    popup.mainloop()
+    popup.wait_window()
 
 def button_click_event():
     dialog = ctk.CTkInputDialog(text="Type in a number:", title="Test")
@@ -40,7 +40,7 @@ def ctk_questionbox(title, message):
     ok_button = ctk.CTkButton(popup, text="OK", command=close)
     ok_button.pack(pady=(0, 20))
 
-    popup.mainloop()
+    popup.wait_window()
 
 def ctk_get_value(input, minvalue, maxvalue, type):
     dialog = ctk.CTkInputDialog(text=input, title="Input")
