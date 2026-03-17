@@ -4,7 +4,7 @@ Creating the Tkinter window and widgets (buttons, labels, canvas, etc.).
 Handling user interactions (button clicks, sliders, etc.).
 Displaying images (e.g., showing OpenCV processed images in the GUI).
 Calling image processing functions when needed.
-Managing the app’s main event loop.
+Managing the app's main event loop.
 '''
 
 from utils.imports import (
@@ -42,304 +42,475 @@ from utils.customMessageBox import ctk_messagebox
 import os
 
 
-# Fix theme path for macOS compatibility
-current_dir = os.path.dirname(os.path.abspath(__file__))  # Get absolute path
-theme_path = os.path.join(current_dir, '..', 'assets', 'theme.json')
-# Ensure the path is absolute and exists
-theme_path = os.path.abspath(theme_path)
-
 class AppWindow:
-    # * Initial Setup
+    # ── Colour palette ───────────────────────────────────────────────────────
+    BG            = "#F5F5F7"
+    CARD          = "#FFFFFF"
+    PRIMARY       = "#18181B"
+    PRIMARY_HOVER = "#374151"
+    BORDER        = "#E5E7EB"
+    TEXT          = "#18181B"
+    TEXT_SEC      = "#374151"
+    TEXT_MUTED    = "#9CA3AF"
+    ACCENT        = "#7C3AED"
+    ACCENT_LIGHT  = "#EDE9F6"
+
+    # ── Tab name constants ───────────────────────────────────────────────────
+    TAB_EDITOR   = "  🖼  Photo Editor  "
+    TAB_BATCH    = "  ⊞  Batch Tools  "
+    TAB_SETTINGS = "  ⚙  Settings  "
+
     def __init__(self):
-        ctk.set_appearance_mode("System")  
-        
-        # Add error handling for theme loading on macOS
-        try:
-            if os.path.exists(theme_path):
-                ctk.set_default_color_theme(theme_path)
-            else:
-                print(f"Theme file not found at: {theme_path}")
-                # Fall back to default theme
-                ctk.set_default_color_theme("blue")
-        except Exception as e:
-            print(f"Error loading theme: {e}")
-            # Fall back to default theme
-            ctk.set_default_color_theme("blue")
+        ctk.set_appearance_mode("Light")
+        ctk.set_default_color_theme("blue")
 
         self.app = ctk.CTk()
         self.app.title("Image Lab")
-        self.app.geometry("1000x500")
+        self.app.geometry("1280x760")
+        self.app.minsize(900, 600)
+        self.app.configure(fg_color=self.BG)
 
-        # macOS-specific window configuration
-        if hasattr(self.app, '_set_appearance_mode'):
-            try:
-                self.app._set_appearance_mode("System")
-            except:
-                pass
-
-        self.tabview = ctk.CTkTabview(master=self.app)
-        self.tabview.pack()
-
-        self.tabview.add("Photo Editor")  # add tab at the end
-        self.tabview.add("Batch Tools")  # new batch tab
-        self.tabview.add("Settings")  # add tab at the end
-        self.tabview.set("Photo Editor")  # set currently visible tab
-
-        # Buttons and Frame
-        # Left Buttons + history column
-        self.btn_frame = ctk.CTkFrame(self.tabview.tab("Photo Editor"))
-        self.btn_frame.pack(side=tk.LEFT, fill="y", padx=10, pady=10)
-
-        # History panel under buttons
-        self.history_frame = ctk.CTkScrollableFrame(self.btn_frame, label_text="History")
-        self.history_frame.pack(side=tk.BOTTOM, fill="both", expand=True, pady=(10, 0))
-        self.history_entries = []
-
-        # Center
-        self.canvas_frame = ctk.CTkFrame(self.tabview.tab("Photo Editor"))
-        self.canvas_frame.pack(side=tk.LEFT, expand=True, fill="both", padx=10, pady=10)
-
-        # Spacer frame on top
-        self.top_spacer = ctk.CTkFrame(self.canvas_frame, height=50)
-        self.top_spacer.pack(side=tk.TOP, fill='x')
-        # self.top_spacer.configure(fg_color='#302c2c')
-
-        self.canvas = tk.Canvas(
-            self.canvas_frame,
-            width=700,
-            height=450,
-            bg='#222222',
-            highlightthickness=2,
-            highlightbackground='white'
-        )
-        self.canvas.pack(expand=True)
-        # self.canvas.configure(fg_color='#302c2c')
-        
-        # Spacer frame below
-        self.bottom_spacer = ctk.CTkFrame(self.canvas_frame)
-        self.bottom_spacer.pack(side=tk.TOP, expand=True, fill="both")
-        # self.bottom_spacer.configure(fg_color='#302c2c')
-
-        # Right Buttons (effects)
-        self.effect_frame = ctk.CTkFrame(self.tabview.tab("Photo Editor"))
-        self.effect_frame.pack(side=tk.LEFT, fill="y", padx=10, pady=10)
-
-        # Far-right control panel for sliders
-        self.control_frame = ctk.CTkFrame(self.tabview.tab("Photo Editor"))
-        self.control_frame.pack(side=tk.LEFT, fill="y", padx=10, pady=10)
-
-        # Images
-        self.original_image = None
-        self.current_image = None
-        self.undo_stack = []
-        self.redo_stack = []
+        # Image state
+        self.original_image    = None
+        self.current_image     = None
+        self.undo_stack        = []
+        self.redo_stack        = []
         self.preview_base_image = None
-        self.recent_files = []
+        self.recent_files      = []
+        self.history_entries   = []
+        self._history_visible  = False
 
-        # Run
-        self.create_buttons()
-        self.create_effect_options()
-        self.create_control_panel()
-        self.create_batch_tab()
-        self.create_settings_tab()
+        # Settings vars (initialised here so they exist before settings tab)
+        self.show_success_toasts = tk.BooleanVar(value=True)
+        self.show_error_dialogs  = tk.BooleanVar(value=True)
+        self.display_mode        = tk.StringVar(value="fit-window")
+        self.tts_enabled         = tk.BooleanVar(value=False)
+
+        # Re-render current image whenever display mode changes
+        self.display_mode.trace_add("write", lambda *_: self._on_display_mode_change())
+
+        # Build UI
+        self._create_header()
+        self._create_tabs()
+        self._create_photo_editor_tab()
+        self._create_batch_tab()
+        self._create_settings_tab()
         self._bind_shortcuts()
+
         self.app.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.app.mainloop()
 
+    # ── Header ───────────────────────────────────────────────────────────────
 
-    # * Tkinter Window Setup
-    def create_buttons(self):
-        buttons = [
-            ("Load Image", self.load_image),
-            ("Save Image", self.save_image),
-            ("Undo", self.undo_image),
-            ("Redo", self.redo_image),
-            ("Reset", self.reset_image)
+    def _create_header(self):
+        header = ctk.CTkFrame(self.app, fg_color=self.CARD, corner_radius=0, height=72)
+        header.pack(fill="x", side="top")
+        header.pack_propagate(False)
+
+        # App icon
+        icon_bg = ctk.CTkFrame(header, fg_color=self.ACCENT, width=44, height=44, corner_radius=10)
+        icon_bg.pack(side="left", padx=(20, 10), pady=14)
+        icon_bg.pack_propagate(False)
+        ctk.CTkLabel(icon_bg, text="🖼", font=("Arial", 22), text_color="white").pack(expand=True)
+
+        # Title + subtitle
+        text_col = ctk.CTkFrame(header, fg_color="transparent")
+        text_col.pack(side="left", pady=14)
+        ctk.CTkLabel(text_col, text="Image Lab",
+                     font=("Arial", 19, "bold"), text_color=self.TEXT).pack(anchor="w")
+        ctk.CTkLabel(text_col, text="Professional photo editing suite",
+                     font=("Arial", 11), text_color=self.TEXT_MUTED).pack(anchor="w")
+
+        # Bottom border
+        ctk.CTkFrame(self.app, fg_color=self.BORDER, height=1, corner_radius=0).pack(fill="x")
+
+    # ── Tab bar ──────────────────────────────────────────────────────────────
+
+    def _create_tabs(self):
+        self.tabview = ctk.CTkTabview(
+            self.app,
+            fg_color=self.BG,
+            segmented_button_fg_color=self.BG,
+            segmented_button_selected_color=self.CARD,
+            segmented_button_selected_hover_color=self.CARD,
+            segmented_button_unselected_color=self.BG,
+            segmented_button_unselected_hover_color="#EBEBED",
+            text_color=self.TEXT_SEC,
+        )
+        self.tabview.pack(fill="both", expand=True)
+        self.tabview.add(self.TAB_EDITOR)
+        self.tabview.add(self.TAB_BATCH)
+        self.tabview.add(self.TAB_SETTINGS)
+        self.tabview.set(self.TAB_EDITOR)
+
+    # ── Photo Editor tab ─────────────────────────────────────────────────────
+
+    def _create_photo_editor_tab(self):
+        tab = self.tabview.tab(self.TAB_EDITOR)
+        tab.configure(fg_color=self.BG)
+
+        # Left sidebar
+        self.left_sidebar = ctk.CTkFrame(tab, fg_color=self.CARD, corner_radius=12, width=215)
+        self.left_sidebar.pack(side="left", fill="y", padx=(10, 5), pady=10)
+        self.left_sidebar.pack_propagate(False)
+
+        # Right panel (scrollable)
+        self.right_panel = ctk.CTkScrollableFrame(
+            tab, fg_color=self.BG, width=295, corner_radius=0,
+            scrollbar_button_color=self.BORDER,
+            scrollbar_button_hover_color="#D1D5DB",
+        )
+        self.right_panel.pack(side="right", fill="y", padx=(5, 10), pady=10)
+
+        # Centre canvas area
+        self.canvas_frame = ctk.CTkFrame(tab, fg_color=self.CARD, corner_radius=12)
+        self.canvas_frame.pack(side="left", fill="both", expand=True, padx=5, pady=10)
+
+        self._build_left_sidebar()
+        self._build_canvas_area()
+        self._build_right_panel()
+
+    # ── Left sidebar ─────────────────────────────────────────────────────────
+
+    def _build_left_sidebar(self):
+        sb = self.left_sidebar
+
+        ctk.CTkLabel(sb, text="Quick Actions",
+                     font=("Arial", 12, "bold"), text_color=self.TEXT
+                     ).pack(anchor="w", padx=15, pady=(16, 8))
+
+        self._sb_btn(sb, "↑   Load Image", self.load_image, primary=True)
+        self._sb_btn(sb, "↓   Save Image", self.save_image)
+
+        self._divider(sb)
+
+        ctk.CTkLabel(sb, text="History",
+                     font=("Arial", 12, "bold"), text_color=self.TEXT
+                     ).pack(anchor="w", padx=15, pady=(4, 8))
+
+        self._sb_btn(sb, "↩   Undo",      self.undo_image)
+        self._sb_btn(sb, "↪   Redo",      self.redo_image)
+        self._sb_btn(sb, "↺   Reset All", self.reset_image)
+
+        self._divider(sb)
+
+        self._sb_btn(sb, "📖   Tutorial",     self.open_tutorial,     ghost=True)
+        self._sb_btn(sb, "🕐   View History", self._toggle_history,   ghost=True)
+
+        # Edit-history log — hidden until user clicks View History
+        self.history_frame = ctk.CTkScrollableFrame(
+            sb, label_text="Edit History", fg_color="#F9FAFB", corner_radius=8,
+            label_font=("Arial", 11, "bold"), label_text_color=self.TEXT_SEC,
+            height=160,
+        )
+
+    def _sb_btn(self, parent, text, command, *, primary=False, ghost=False):
+        if primary:
+            kw = dict(fg_color=self.PRIMARY, hover_color=self.PRIMARY_HOVER,
+                      text_color="white")
+        elif ghost:
+            kw = dict(fg_color="transparent", hover_color="#F5F5F7",
+                      text_color=self.TEXT_SEC)
+        else:
+            kw = dict(fg_color=self.CARD, hover_color="#F5F5F7",
+                      text_color=self.TEXT, border_width=1, border_color=self.BORDER)
+
+        btn = ctk.CTkButton(parent, text=text, command=command,
+                            corner_radius=8, height=36, anchor="w", **kw)
+        btn.pack(fill="x", padx=15, pady=(0, 6))
+        return btn
+
+    def _divider(self, parent):
+        ctk.CTkFrame(parent, fg_color=self.BORDER, height=1).pack(fill="x", padx=15, pady=8)
+
+    def _toggle_history(self):
+        if self._history_visible:
+            self.history_frame.pack_forget()
+            self._history_visible = False
+        else:
+            self.history_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+            self._history_visible = True
+
+    # ── Canvas ───────────────────────────────────────────────────────────────
+
+    def _build_canvas_area(self):
+        # Empty state — shown when no image is loaded
+        self._empty_frame = ctk.CTkFrame(self.canvas_frame, fg_color=self.CARD, corner_radius=0)
+        self._empty_frame.pack(fill="both", expand=True)
+
+        inner = ctk.CTkFrame(self._empty_frame, fg_color="transparent")
+        inner.place(relx=0.5, rely=0.45, anchor="center")
+
+        circle = ctk.CTkFrame(inner, fg_color=self.ACCENT_LIGHT, width=116, height=116, corner_radius=58)
+        circle.pack()
+        circle.pack_propagate(False)
+        ctk.CTkLabel(circle, text="📷", font=("Arial", 44)).pack(expand=True)
+
+        ctk.CTkLabel(inner, text="No Image Loaded",
+                     font=("Arial", 17, "bold"), text_color=self.TEXT).pack(pady=(20, 0))
+        ctk.CTkLabel(inner,
+                     text="Upload an image to start editing with our\nprofessional tools",
+                     font=("Arial", 11), text_color=self.TEXT_MUTED, justify="center").pack(pady=(8, 20))
+        ctk.CTkButton(inner, text="↑   Choose Image", command=self.load_image,
+                      fg_color=self.PRIMARY, hover_color=self.PRIMARY_HOVER,
+                      text_color="white", corner_radius=8, height=40, width=160).pack()
+
+        # Canvas — shown once an image is loaded (hidden initially)
+        self.canvas = tk.Canvas(self.canvas_frame, bg=self.CARD, highlightthickness=0)
+        self.canvas.bind("<Configure>", self._on_canvas_resize)
+
+    def _on_canvas_resize(self, _event):
+        if self.current_image is not None:
+            self.show_image(self.current_image)
+
+    def _show_canvas(self):
+        """Switch from empty state to canvas."""
+        self._empty_frame.pack_forget()
+        self.canvas.pack(fill="both", expand=True, padx=2, pady=2)
+
+    def _on_display_mode_change(self):
+        if self.current_image is not None:
+            self.show_image(self.current_image)
+
+    # ── Right panel ──────────────────────────────────────────────────────────
+
+    def _build_right_panel(self):
+        ctk.CTkLabel(self.right_panel, text="Adjustments & Filters",
+                     font=("Arial", 15, "bold"), text_color=self.TEXT
+                     ).pack(anchor="w", pady=(4, 10))
+
+        adj_content = self._collapsible_card(self.right_panel, "✦   Basic Adjustments")
+        self._build_basic_adjustments(adj_content)
+
+        filt_content = self._collapsible_card(self.right_panel, "▼   Creative Filters")
+        self._build_creative_filters(filt_content)
+
+    def _collapsible_card(self, parent, title):
+        """Returns the content frame of a collapsible white card."""
+        card = ctk.CTkFrame(parent, fg_color=self.CARD, corner_radius=12)
+        card.pack(fill="x", pady=(0, 10))
+        is_open = [True]
+
+        hdr = ctk.CTkFrame(card, fg_color="transparent")
+        hdr.pack(fill="x", padx=14, pady=(12, 0))
+
+        ctk.CTkLabel(hdr, text=title,
+                     font=("Arial", 13, "bold"), text_color=self.TEXT).pack(side="left")
+
+        toggle_btn = ctk.CTkButton(
+            hdr, text="∧", width=28, height=28,
+            fg_color="transparent", hover_color=self.BG,
+            text_color=self.TEXT_MUTED, font=("Arial", 15, "bold"),
+            corner_radius=6,
+        )
+        toggle_btn.pack(side="right")
+
+        content = ctk.CTkFrame(card, fg_color="transparent")
+        content.pack(fill="x", padx=14, pady=(6, 14))
+
+        def toggle():
+            if is_open[0]:
+                content.pack_forget()
+                toggle_btn.configure(text="∨")
+                is_open[0] = False
+            else:
+                content.pack(fill="x", padx=14, pady=(6, 14))
+                toggle_btn.configure(text="∧")
+                is_open[0] = True
+
+        toggle_btn.configure(command=toggle)
+        return content
+
+    def _build_basic_adjustments(self, parent):
+        # (icon, label, from, to, initial, steps, fmt_fn, slider_attr, live_cb, release_cb)
+        cfg = [
+            ("☀", "Brightness", 0.0, 2.0, 1.0, 100,
+             lambda v: f"{int(float(v) * 100)}%", "brightness_slider",
+             self.on_brightness_change, self.apply_brightness_from_slider),
+            ("◑", "Contrast", 0.0, 2.0, 1.0, 100,
+             lambda v: f"{int(float(v) * 100)}%", "contrast_slider",
+             self.on_contrast_change, self.apply_contrast_from_slider),
+            ("💧", "Saturation", 0.0, 2.0, 1.0, 100,
+             lambda v: f"{int(float(v) * 100)}%", "saturation_slider",
+             None, self.apply_saturation_from_slider),
+            ("◎", "Blur Radius", 0, 10, 0, 10,
+             lambda v: f"{int(float(v))}px", "blur_slider",
+             None, self.apply_blur_from_slider),
+            ("⊞", "Noise Intensity", 0.0, 1.0, 0.0, 20,
+             lambda v: f"{int(float(v) * 100)}%", "noise_slider",
+             None, self.apply_noise_from_slider),
         ]
-     
-        for text, command in buttons:
-            button = ctk.CTkButton(self.btn_frame, text=text, command=command)
-            button.pack(pady=5, side=tk.TOP)
 
-        # Tutorial Button
-        tut_button = ctk.CTkButton(self.btn_frame, text="Tutorial", command=self.open_tutorial)
-        tut_button.pack(pady=5, side=tk.TOP)
+        for icon, label, from_, to, initial, steps, fmt, attr, live_cb, release_cb in cfg:
+            # Label row
+            row = ctk.CTkFrame(parent, fg_color="transparent")
+            row.pack(fill="x", pady=(8, 0))
 
-    def open_tutorial(self):
-        pass
+            ctk.CTkLabel(row, text=f"{icon}  {label}",
+                         font=("Arial", 12), text_color=self.TEXT_SEC).pack(side="left")
 
-    def create_effect_options(self):
-        effects = [
-            ("Brightness", self.adjust_brightness),
-            ("Contrast", self.adjust_contrast),
-            ("Saturation", self.adjust_saturation),
-            ("Glitch", self.apply_glitch),
-            ("Blur", self.apply_blur),
-            ("Sharpen", self.apply_sharpen),
-            ("Pixilate", self.apply_pixels),
-            ("Invert Colors", self.apply_invert),
-            ("Add Noise", self.apply_noise),
-            ("Vignette", self.apply_vignette),
-            ("Retro Filter", self.apply_retro_filter),
-            ("Pencil Sketch", self.apply_pencil),
-            ("Smart Enhance", self.apply_smart_enhance)
-            # Thermal Camera
-            # Face Swap if face detection
-            # Gamma Correct
-            # Sepia tone
+            val_lbl = ctk.CTkLabel(row, text=fmt(initial),
+                                   font=("Arial", 12), text_color=self.TEXT_MUTED)
+            val_lbl.pack(side="right")
+
+            def _make_cmd(vl, f, live):
+                def cmd(value):
+                    vl.configure(text=f(value))
+                    if live:
+                        live(value)
+                return cmd
+
+            slider = ctk.CTkSlider(
+                parent, from_=from_, to=to, number_of_steps=steps,
+                fg_color=self.BORDER,
+                progress_color=self.PRIMARY,
+                button_color=self.PRIMARY,
+                button_hover_color=self.PRIMARY_HOVER,
+                command=_make_cmd(val_lbl, fmt, live_cb),
+            )
+            slider.set(initial)
+            slider.pack(fill="x", pady=(4, 0))
+            slider.bind("<ButtonRelease-1>", lambda e, cb=release_cb: cb())
+
+            setattr(self, attr, slider)
+
+    def _build_creative_filters(self, parent):
+        filters = [
+            ("⚡", "Glitch Effect",  self.apply_glitch),
+            ("✨", "Sharpen",        self.apply_sharpen),
+            ("⊙", "Invert Colors",  self.apply_invert),
+            ("◉", "Vignette",       self.apply_vignette),
+            ("▦", "Pixelate",       self.apply_pixels),
+            ("↻", "Retro Filter",   self.apply_retro_filter),
+            ("✏", "Pencil Sketch",  self.apply_pencil),
+            ("⚙", "Smart Enhance",  self.apply_smart_enhance),
         ]
+        for icon, name, cmd in filters:
+            ctk.CTkButton(
+                parent, text=f"{icon}   {name}", command=cmd,
+                fg_color=self.CARD, hover_color=self.BG,
+                text_color=self.TEXT_SEC,
+                border_width=1, border_color=self.BORDER,
+                corner_radius=8, height=36, anchor="w",
+            ).pack(fill="x", pady=(0, 6))
 
-        for text, command in effects:
-            button = ctk.CTkButton(self.effect_frame, text=text, command=command)
-            button.pack(side=tk.TOP, pady=3)
+    # ── Batch Tools tab ──────────────────────────────────────────────────────
 
-    def create_batch_tab(self):
-        """Create UI for batch processing tools."""
-        tab = self.tabview.tab("Batch Tools")
+    def _create_batch_tab(self):
+        tab = self.tabview.tab(self.TAB_BATCH)
+        tab.configure(fg_color=self.BG)
 
-        frame = ctk.CTkFrame(tab)
+        card = ctk.CTkFrame(tab, fg_color=self.CARD, corner_radius=12)
+        card.pack(fill="both", expand=True, padx=20, pady=20)
+
+        frame = ctk.CTkFrame(card, fg_color="transparent")
         frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        input_label = ctk.CTkLabel(frame, text="Input folder")
-        input_label.grid(row=0, column=0, sticky="w", pady=(0, 5))
-        self.batch_input_entry = ctk.CTkEntry(frame, width=350)
+        ctk.CTkLabel(frame, text="Input folder",
+                     font=("Arial", 12), text_color=self.TEXT
+                     ).grid(row=0, column=0, sticky="w", pady=(0, 5))
+        self.batch_input_entry = ctk.CTkEntry(frame, width=350, border_color=self.BORDER)
         self.batch_input_entry.grid(row=1, column=0, sticky="w")
-        input_btn = ctk.CTkButton(frame, text="Browse…", command=self._choose_batch_input)
-        input_btn.grid(row=1, column=1, padx=(10, 0))
+        ctk.CTkButton(frame, text="Browse…", command=self._choose_batch_input,
+                      fg_color=self.PRIMARY, hover_color=self.PRIMARY_HOVER
+                      ).grid(row=1, column=1, padx=(10, 0))
 
-        output_label = ctk.CTkLabel(frame, text="Output folder")
-        output_label.grid(row=2, column=0, sticky="w", pady=(15, 5))
-        self.batch_output_entry = ctk.CTkEntry(frame, width=350)
+        ctk.CTkLabel(frame, text="Output folder",
+                     font=("Arial", 12), text_color=self.TEXT
+                     ).grid(row=2, column=0, sticky="w", pady=(15, 5))
+        self.batch_output_entry = ctk.CTkEntry(frame, width=350, border_color=self.BORDER)
         self.batch_output_entry.grid(row=3, column=0, sticky="w")
-        output_btn = ctk.CTkButton(frame, text="Browse…", command=self._choose_batch_output)
-        output_btn.grid(row=3, column=1, padx=(10, 0))
+        ctk.CTkButton(frame, text="Browse…", command=self._choose_batch_output,
+                      fg_color=self.PRIMARY, hover_color=self.PRIMARY_HOVER
+                      ).grid(row=3, column=1, padx=(10, 0))
 
-        # Options
-        self.batch_retro_var = tk.BooleanVar(value=True)
+        self.batch_retro_var   = tk.BooleanVar(value=True)
         self.batch_sharpen_var = tk.BooleanVar(value=True)
-        self.batch_blur_var = tk.BooleanVar(value=False)
+        self.batch_blur_var    = tk.BooleanVar(value=False)
 
-        retro_chk = ctk.CTkCheckBox(frame, text="Apply Retro Filter", variable=self.batch_retro_var)
-        retro_chk.grid(row=4, column=0, sticky="w", pady=(20, 5))
-        sharpen_chk = ctk.CTkCheckBox(frame, text="Apply Sharpen", variable=self.batch_sharpen_var)
-        sharpen_chk.grid(row=5, column=0, sticky="w", pady=5)
-        blur_chk = ctk.CTkCheckBox(frame, text="Apply Blur", variable=self.batch_blur_var)
-        blur_chk.grid(row=6, column=0, sticky="w", pady=5)
+        ctk.CTkCheckBox(frame, text="Apply Retro Filter",
+                        variable=self.batch_retro_var
+                        ).grid(row=4, column=0, sticky="w", pady=(20, 5))
+        ctk.CTkCheckBox(frame, text="Apply Sharpen",
+                        variable=self.batch_sharpen_var
+                        ).grid(row=5, column=0, sticky="w", pady=5)
+        ctk.CTkCheckBox(frame, text="Apply Blur",
+                        variable=self.batch_blur_var
+                        ).grid(row=6, column=0, sticky="w", pady=5)
 
-        self.batch_blur_slider = ctk.CTkSlider(frame, from_=0, to=10, number_of_steps=10)
+        self.batch_blur_slider = ctk.CTkSlider(
+            frame, from_=0, to=10, number_of_steps=10,
+            fg_color=self.BORDER, progress_color=self.PRIMARY,
+            button_color=self.PRIMARY, button_hover_color=self.PRIMARY_HOVER,
+        )
         self.batch_blur_slider.set(3)
         self.batch_blur_slider.grid(row=7, column=0, sticky="we", pady=(0, 10))
 
-        run_btn = ctk.CTkButton(frame, text="Run Batch Processing", command=self._run_batch_processing)
-        run_btn.grid(row=8, column=0, columnspan=2, sticky="we", pady=(20, 0))
+        ctk.CTkButton(frame, text="Run Batch Processing",
+                      command=self._run_batch_processing,
+                      fg_color=self.PRIMARY, hover_color=self.PRIMARY_HOVER
+                      ).grid(row=8, column=0, columnspan=2, sticky="we", pady=(20, 0))
 
-        # Recent files display (read-only)
-        recent_label = ctk.CTkLabel(frame, text="Recent files this session")
-        recent_label.grid(row=0, column=2, sticky="w", padx=(40, 0))
-        self.recent_files_box = ctk.CTkTextbox(frame, width=260, height=180)
+        ctk.CTkLabel(frame, text="Recent files this session",
+                     font=("Arial", 12), text_color=self.TEXT
+                     ).grid(row=0, column=2, sticky="w", padx=(40, 0))
+        self.recent_files_box = ctk.CTkTextbox(
+            frame, width=260, height=180,
+            border_color=self.BORDER, border_width=1,
+        )
         self.recent_files_box.grid(row=1, column=2, rowspan=8, sticky="nsew", padx=(40, 0))
         self.recent_files_box.configure(state="disabled")
 
         frame.grid_columnconfigure(0, weight=1)
-        frame.grid_columnconfigure(2, weight=0)
 
-    def create_settings_tab(self):
-        """Create basic settings UI."""
-        tab = self.tabview.tab("Settings")
+    # ── Settings tab ─────────────────────────────────────────────────────────
 
-        frame = ctk.CTkFrame(tab)
+    def _create_settings_tab(self):
+        tab = self.tabview.tab(self.TAB_SETTINGS)
+        tab.configure(fg_color=self.BG)
+
+        card = ctk.CTkFrame(tab, fg_color=self.CARD, corner_radius=12)
+        card.pack(fill="both", expand=True, padx=20, pady=20)
+
+        frame = ctk.CTkFrame(card, fg_color="transparent")
         frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Notification settings
-        notif_label = ctk.CTkLabel(frame, text="Notifications", font=("Arial", 14, "bold"))
-        notif_label.grid(row=0, column=0, sticky="w", pady=(0, 5))
+        ctk.CTkLabel(frame, text="Notifications",
+                     font=("Arial", 14, "bold"), text_color=self.TEXT
+                     ).grid(row=0, column=0, sticky="w", pady=(0, 5))
+        ctk.CTkCheckBox(frame, text="Show success popups (e.g., after save/apply)",
+                        variable=self.show_success_toasts
+                        ).grid(row=1, column=0, sticky="w", pady=2)
+        ctk.CTkCheckBox(frame, text="Show error dialogs",
+                        variable=self.show_error_dialogs
+                        ).grid(row=2, column=0, sticky="w", pady=2)
 
-        self.show_success_toasts = tk.BooleanVar(value=True)
-        self.show_error_dialogs = tk.BooleanVar(value=True)
+        ctk.CTkLabel(frame, text="Display",
+                     font=("Arial", 14, "bold"), text_color=self.TEXT
+                     ).grid(row=3, column=0, sticky="w", pady=(20, 5))
+        ctk.CTkRadioButton(frame, text="Fit to width",
+                           variable=self.display_mode, value="fit-width"
+                           ).grid(row=4, column=0, sticky="w", pady=2)
+        ctk.CTkRadioButton(frame, text="Fit to window",
+                           variable=self.display_mode, value="fit-window"
+                           ).grid(row=5, column=0, sticky="w", pady=2)
 
-        success_chk = ctk.CTkCheckBox(frame, text="Show success popups (e.g., after save/apply)", variable=self.show_success_toasts)
-        success_chk.grid(row=1, column=0, sticky="w", pady=2)
+        ctk.CTkLabel(frame, text="TTS / Sound (future)",
+                     font=("Arial", 14, "bold"), text_color=self.TEXT
+                     ).grid(row=6, column=0, sticky="w", pady=(20, 5))
+        ctk.CTkCheckBox(frame, text="Enable spoken feedback (planned)",
+                        variable=self.tts_enabled, state="disabled"
+                        ).grid(row=7, column=0, sticky="w", pady=2)
 
-        error_chk = ctk.CTkCheckBox(frame, text="Show error dialogs", variable=self.show_error_dialogs)
-        error_chk.grid(row=2, column=0, sticky="w", pady=2)
-
-        # Display size settings
-        display_label = ctk.CTkLabel(frame, text="Display", font=("Arial", 14, "bold"))
-        display_label.grid(row=3, column=0, sticky="w", pady=(20, 5))
-
-        self.display_mode = tk.StringVar(value="fit-width")
-        fit_width_radio = ctk.CTkRadioButton(frame, text="Fit to width", variable=self.display_mode, value="fit-width")
-        fit_width_radio.grid(row=4, column=0, sticky="w", pady=2)
-        fit_window_radio = ctk.CTkRadioButton(frame, text="Fit to window", variable=self.display_mode, value="fit-window")
-        fit_window_radio.grid(row=5, column=0, sticky="w", pady=2)
-
-        # Placeholder for future TTS toggle
-        tts_label = ctk.CTkLabel(frame, text="TTS / Sound (future)", font=("Arial", 14, "bold"))
-        tts_label.grid(row=6, column=0, sticky="w", pady=(20, 5))
-        self.tts_enabled = tk.BooleanVar(value=False)
-        tts_chk = ctk.CTkCheckBox(frame, text="Enable spoken feedback (planned)", variable=self.tts_enabled, state="disabled")
-        tts_chk.grid(row=7, column=0, sticky="w", pady=2)
-
-    def create_control_panel(self):
-        """Create slider-based controls for key adjustments on the right side."""
-        title_label = ctk.CTkLabel(self.control_frame, text="Adjustments", font=("Arial", 14, "bold"))
-        title_label.pack(pady=(0, 10))
-
-        # Brightness slider
-        self.brightness_label = ctk.CTkLabel(self.control_frame, text="Brightness")
-        self.brightness_label.pack()
-        self.brightness_slider = ctk.CTkSlider(self.control_frame, from_=0.0, to=2.0, number_of_steps=100,
-                                               command=self.on_brightness_change)
-        self.brightness_slider.set(1.0)
-        self.brightness_slider.pack(fill="x", pady=(0, 5))
-        brightness_button = ctk.CTkButton(self.control_frame, text="Apply Brightness", command=self.apply_brightness_from_slider)
-        brightness_button.pack(pady=(0, 10), fill="x")
-
-        # Contrast slider
-        self.contrast_label = ctk.CTkLabel(self.control_frame, text="Contrast")
-        self.contrast_label.pack()
-        self.contrast_slider = ctk.CTkSlider(self.control_frame, from_=0.0, to=2.0, number_of_steps=100,
-                                             command=self.on_contrast_change)
-        self.contrast_slider.set(1.0)
-        self.contrast_slider.pack(fill="x", pady=(0, 5))
-        contrast_button = ctk.CTkButton(self.control_frame, text="Apply Contrast", command=self.apply_contrast_from_slider)
-        contrast_button.pack(pady=(0, 10), fill="x")
-
-        # Saturation slider
-        self.saturation_label = ctk.CTkLabel(self.control_frame, text="Saturation")
-        self.saturation_label.pack()
-        self.saturation_slider = ctk.CTkSlider(self.control_frame, from_=0.0, to=2.0, number_of_steps=100)
-        self.saturation_slider.set(1.0)
-        self.saturation_slider.pack(fill="x", pady=(0, 5))
-        saturation_button = ctk.CTkButton(self.control_frame, text="Apply Saturation", command=self.apply_saturation_from_slider)
-        saturation_button.pack(pady=(0, 10), fill="x")
-
-        # Blur slider
-        self.blur_label = ctk.CTkLabel(self.control_frame, text="Blur Radius")
-        self.blur_label.pack()
-        self.blur_slider = ctk.CTkSlider(self.control_frame, from_=0, to=10, number_of_steps=10)
-        self.blur_slider.set(0)
-        self.blur_slider.pack(fill="x", pady=(0, 5))
-        blur_button = ctk.CTkButton(self.control_frame, text="Apply Blur", command=self.apply_blur_from_slider)
-        blur_button.pack(pady=(0, 10), fill="x")
-
-        # Noise slider
-        self.noise_label = ctk.CTkLabel(self.control_frame, text="Noise Intensity")
-        self.noise_label.pack()
-        self.noise_slider = ctk.CTkSlider(self.control_frame, from_=0.0, to=1.0, number_of_steps=20)
-        self.noise_slider.set(0.0)
-        self.noise_slider.pack(fill="x", pady=(0, 5))
-        noise_button = ctk.CTkButton(self.control_frame, text="Apply Noise", command=self.apply_noise_from_slider)
-        noise_button.pack(pady=(0, 10), fill="x")
-
-    # * Image  
+    # ── Image loading / saving ────────────────────────────────────────────────
 
     def load_image(self):
         file_path = load_image_via_dialog()
         if file_path:
             self.original_image = cv.imread(filename=file_path)
-            self.current_image = self.original_image.copy()
+            self.current_image  = self.original_image.copy()
             self.preview_base_image = None
+            self._show_canvas()
             self.show_image(self.current_image)
             self.undo_stack.clear()
             self.redo_stack.clear()
@@ -348,13 +519,13 @@ class AppWindow:
 
     def save_image(self):
         if self.current_image is None:
-            ctk_messagebox(title="Error", message="Please select an Image first")
+            ctk_messagebox(title="Error", message="Please select an image first.")
             return
         save_image_via_dialog(self.current_image)
 
     def reset_image(self):
         if self.current_image is None:
-            ctk_messagebox(title="Error", message="No Image to Reset")
+            ctk_messagebox(title="Error", message="No image to reset.")
             return
         self.add_to_undo_stack()
         self.current_image = self.original_image.copy()
@@ -363,169 +534,89 @@ class AppWindow:
         self.add_history_entry("Reset to original")
 
     def undo_image(self):
-        print("Trying to undo")
-        if len(self.undo_stack) > 0:
+        if self.undo_stack:
             self.redo_stack.append(self.current_image.copy())
             self.current_image = self.undo_stack.pop()
             self.show_image(self.current_image)
             self.preview_base_image = None
             self.add_history_entry("Undo")
         else:
-            ctk_messagebox(title="Error", message="Still the original image")
-
-    def add_to_undo_stack(self):
-        self.undo_stack.append(self.current_image)
-        self.redo_stack.clear()
+            ctk_messagebox(title="Info", message="Nothing to undo.")
 
     def redo_image(self):
-        print("Trying to Redo")
-        if len(self.redo_stack) > 0:
+        if self.redo_stack:
             self.undo_stack.append(self.current_image.copy())
             self.current_image = self.redo_stack.pop()
             self.show_image(self.current_image)
             self.preview_base_image = None
             self.add_history_entry("Redo")
         else:
-            ctk_messagebox(title="Error", message="Still the original image")
-            
+            ctk_messagebox(title="Info", message="Nothing to redo.")
 
-    # * Image Editing / Functions 
+    def add_to_undo_stack(self):
+        self.undo_stack.append(self.current_image.copy())
+        self.redo_stack.clear()
+
+    # ── Display ───────────────────────────────────────────────────────────────
 
     def show_image(self, image):
+        w = self.canvas.winfo_width()
+        h = self.canvas.winfo_height()
+        if w < 10 or h < 10:
+            w, h = 700, 450
+
         image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_rgb)
-        image_pil = image_pil.resize((700,450), Image.LANCZOS)
-        image_tk = ImageTk.PhotoImage(image=image_pil)
 
-        self.canvas.delete("all") 
-        self.canvas.create_image(0,0, anchor='nw', image=image_tk)
+        img_w, img_h = image_pil.size
+        if self.display_mode.get() == "fit-width":
+            scale = w / img_w
+        else:  # fit-window (default)
+            scale = min(w / img_w, h / img_h)
+        new_w, new_h = int(img_w * scale), int(img_h * scale)
+        image_pil = image_pil.resize((new_w, new_h), Image.LANCZOS)
+
+        image_tk = ImageTk.PhotoImage(image=image_pil)
+        self.canvas.delete("all")
+        self.canvas.create_image(w // 2, h // 2, anchor="center", image=image_tk)
         self.canvas.image_tk = image_tk
 
     def on_closing(self):
         if messagebox.askokcancel("Quit", "Are you sure you want to quit?"):
-            print("closed app")
             self.app.destroy()
 
-    # image editing functions
+    # ── Generic filter applier ────────────────────────────────────────────────
 
-    def adjust_brightness(self):
+    def _apply(self, fn, label):
         if not check_image_loaded(self.current_image):
             return
         self.add_to_undo_stack()
-        self.current_image = adjust_brightness(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Brightness (dialog)")
-
-    def adjust_contrast(self):
-        if not check_image_loaded(self.current_image):
+        result = fn(self.current_image)
+        if result is None:
+            self.undo_stack.pop()
             return
-        self.add_to_undo_stack()
-        self.current_image = adjust_contrast(self.current_image)
+        self.current_image = result
         self.show_image(self.current_image)
         self.preview_base_image = None
-        self.add_history_entry("Contrast (dialog)")
+        self.add_history_entry(label)
 
-    def adjust_saturation(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = adjust_saturation(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Saturation (dialog)")
+    # ── One-click filter commands ─────────────────────────────────────────────
 
-    def apply_glitch(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_glitch(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Glitch")
+    def adjust_brightness(self):  self._apply(adjust_brightness,  "Brightness (dialog)")
+    def adjust_contrast(self):    self._apply(adjust_contrast,    "Contrast (dialog)")
+    def adjust_saturation(self):  self._apply(adjust_saturation,  "Saturation (dialog)")
+    def apply_glitch(self):       self._apply(apply_glitch,       "Glitch")
+    def apply_blur(self):         self._apply(apply_blur,         "Blur (dialog)")
+    def apply_sharpen(self):      self._apply(apply_sharpen,      "Sharpen")
+    def apply_pixels(self):       self._apply(apply_pixels,       "Pixelate")
+    def apply_invert(self):       self._apply(apply_invert,       "Invert")
+    def apply_noise(self):        self._apply(apply_noise,        "Noise (dialog)")
+    def apply_vignette(self):     self._apply(apply_vignette,     "Vignette")
+    def apply_retro_filter(self): self._apply(apply_retro_filter, "Retro filter")
+    def apply_pencil(self):       self._apply(apply_pencil,       "Pencil sketch")
+    def apply_smart_enhance(self):self._apply(apply_smart_enhance,"Smart Enhance")
 
-    def apply_blur(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_blur(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Blur (dialog)")
-
-    def apply_sharpen(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_sharpen(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Sharpen")
-
-    def apply_pixels(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_pixels(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Pixilate")
-
-    def apply_invert(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_invert(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Invert")
-
-    def apply_noise(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_noise(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Noise (dialog)")
-
-    def apply_vignette(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_vignette(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Vignette")
-
-    def apply_retro_filter(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_retro_filter(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Retro filter")
-
-    def apply_pencil(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_pencil(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Pencil sketch")
-
-    def apply_smart_enhance(self):
-        if not check_image_loaded(self.current_image):
-            return
-        self.add_to_undo_stack()
-        self.current_image = apply_smart_enhance(self.current_image)
-        self.show_image(self.current_image)
-        self.preview_base_image = None
-        self.add_history_entry("Smart Enhance")
-
-    # Slider-based adjustment handlers
+    # ── Slider apply (committed on mouse-release) ─────────────────────────────
 
     def apply_brightness_from_slider(self):
         if not check_image_loaded(self.current_image):
@@ -535,7 +626,7 @@ class AppWindow:
         self.current_image = adjust_brightness_with_factor(self.current_image, factor)
         self.show_image(self.current_image)
         self.preview_base_image = None
-        self.add_history_entry(f"Brightness slider: {factor:.2f}")
+        self.add_history_entry(f"Brightness: {factor:.2f}")
 
     def apply_contrast_from_slider(self):
         if not check_image_loaded(self.current_image):
@@ -545,7 +636,7 @@ class AppWindow:
         self.current_image = adjust_contrast_with_factor(self.current_image, factor)
         self.show_image(self.current_image)
         self.preview_base_image = None
-        self.add_history_entry(f"Contrast slider: {factor:.2f}")
+        self.add_history_entry(f"Contrast: {factor:.2f}")
 
     def apply_saturation_from_slider(self):
         if not check_image_loaded(self.current_image):
@@ -555,67 +646,62 @@ class AppWindow:
         self.current_image = adjust_saturation_with_factor(self.current_image, factor)
         self.show_image(self.current_image)
         self.preview_base_image = None
-        self.add_history_entry(f"Saturation slider: {factor:.2f}")
+        self.add_history_entry(f"Saturation: {factor:.2f}")
 
     def apply_blur_from_slider(self):
         if not check_image_loaded(self.current_image):
             return
         radius = self.blur_slider.get()
         if radius <= 0:
-            # No blur requested
             return
         self.add_to_undo_stack()
         self.current_image = apply_blur_with_radius(self.current_image, radius)
         self.show_image(self.current_image)
         self.preview_base_image = None
-        self.add_history_entry(f"Blur slider: {radius:.1f}")
+        self.add_history_entry(f"Blur: {radius:.1f}px")
 
     def apply_noise_from_slider(self):
         if not check_image_loaded(self.current_image):
             return
         intensity = self.noise_slider.get()
         if intensity <= 0:
-            # No additional noise
             return
         self.add_to_undo_stack()
         self.current_image = apply_noise_with_intensity(self.current_image, intensity)
         self.show_image(self.current_image)
         self.preview_base_image = None
-        self.add_history_entry(f"Noise slider: {intensity:.2f}")
+        self.add_history_entry(f"Noise: {intensity:.2f}")
 
-    # Live preview callbacks for sliders (brightness & contrast)
+    # ── Live preview callbacks (brightness & contrast only) ───────────────────
 
     def on_brightness_change(self, value):
         if self.current_image is None:
             return
         if self.preview_base_image is None:
             self.preview_base_image = self.current_image.copy()
-        factor = float(value)
-        preview = adjust_brightness_with_factor(self.preview_base_image, factor)
-        self.show_image(preview)
+        self.show_image(adjust_brightness_with_factor(self.preview_base_image, float(value)))
 
     def on_contrast_change(self, value):
         if self.current_image is None:
             return
         if self.preview_base_image is None:
             self.preview_base_image = self.current_image.copy()
-        factor = float(value)
-        preview = adjust_contrast_with_factor(self.preview_base_image, factor)
-        self.show_image(preview)
+        self.show_image(adjust_contrast_with_factor(self.preview_base_image, float(value)))
 
-    # History helpers
+    # ── History helpers ───────────────────────────────────────────────────────
 
     def add_history_entry(self, text: str):
-        label = ctk.CTkLabel(self.history_frame, text=text, anchor="w")
-        label.pack(fill="x", padx=5, pady=2)
-        self.history_entries.append(label)
+        lbl = ctk.CTkLabel(self.history_frame, text=text, anchor="w",
+                           font=("Arial", 11), text_color=self.TEXT_SEC)
+        lbl.pack(fill="x", padx=5, pady=2)
+        self.history_entries.append(lbl)
 
     def clear_history(self):
         for lbl in self.history_entries:
             lbl.destroy()
         self.history_entries = []
 
-    # Recent files helpers
+    # ── Recent files ──────────────────────────────────────────────────────────
 
     def _add_recent_file(self, path: str, max_items: int = 10):
         if path in self.recent_files:
@@ -633,7 +719,7 @@ class AppWindow:
             self.recent_files_box.insert("end", p + "\n")
         self.recent_files_box.configure(state="disabled")
 
-    # Batch tools callbacks
+    # ── Batch helpers ─────────────────────────────────────────────────────────
 
     def _choose_batch_input(self):
         folder = filedialog.askdirectory(title="Select input folder")
@@ -650,47 +736,40 @@ class AppWindow:
     def _run_batch_processing(self):
         from processing.batch import process_folder_basic
 
-        input_folder = self.batch_input_entry.get().strip()
+        input_folder  = self.batch_input_entry.get().strip()
         output_folder = self.batch_output_entry.get().strip()
         if not input_folder or not output_folder:
             ctk_messagebox(title="Error", message="Please choose both input and output folders.")
             return
 
-        apply_retro = self.batch_retro_var.get()
-        apply_sharpen_flag = self.batch_sharpen_var.get()
-        blur_radius = self.batch_blur_slider.get() if self.batch_blur_var.get() else None
-
         process_folder_basic(
             input_folder=input_folder,
             output_folder=output_folder,
-            apply_retro=apply_retro,
-            apply_sharpen_flag=apply_sharpen_flag,
-            blur_radius=blur_radius,
+            apply_retro=self.batch_retro_var.get(),
+            apply_sharpen_flag=self.batch_sharpen_var.get(),
+            blur_radius=self.batch_blur_slider.get() if self.batch_blur_var.get() else None,
         )
-
         ctk_messagebox(title="Batch complete", message="Finished processing images in the folder.")
 
-    # Keyboard shortcuts
+    # ── Misc ──────────────────────────────────────────────────────────────────
+
+    def open_tutorial(self):
+        pass
+
+    # ── Keyboard shortcuts ────────────────────────────────────────────────────
 
     def _bind_shortcuts(self):
-        # File operations
-        self.app.bind("<Command-o>", lambda event: self.load_image())
-        self.app.bind("<Control-o>", lambda event: self.load_image())
-        self.app.bind("<Command-s>", lambda event: self.save_image())
-        self.app.bind("<Control-s>", lambda event: self.save_image())
+        pairs = [
+            ("<Command-o>", "<Control-o>", self.load_image),
+            ("<Command-s>", "<Control-s>", self.save_image),
+            ("<Command-z>", "<Control-z>", self.undo_image),
+            ("<Command-r>", "<Control-r>", self.reset_image),
+            ("<Command-b>", "<Control-b>", self.apply_blur),
+            ("<Command-e>", "<Control-e>", self.apply_smart_enhance),
+        ]
+        for mac, win, fn in pairs:
+            self.app.bind(mac, lambda e, f=fn: f())
+            self.app.bind(win, lambda e, f=fn: f())
 
-        # History operations
-        self.app.bind("<Command-z>", lambda event: self.undo_image())
-        self.app.bind("<Control-z>", lambda event: self.undo_image())
-        self.app.bind("<Shift-Command-Z>", lambda event: self.redo_image())
-        self.app.bind("<Control-y>", lambda event: self.redo_image())
-
-        # Reset
-        self.app.bind("<Command-r>", lambda event: self.reset_image())
-        self.app.bind("<Control-r>", lambda event: self.reset_image())
-
-        # A couple of quick filters
-        self.app.bind("<Command-b>", lambda event: self.apply_blur())
-        self.app.bind("<Control-b>", lambda event: self.apply_blur())
-        self.app.bind("<Command-e>", lambda event: self.apply_smart_enhance())
-        self.app.bind("<Control-e>", lambda event: self.apply_smart_enhance())
+        self.app.bind("<Shift-Command-Z>", lambda e: self.redo_image())
+        self.app.bind("<Control-y>",       lambda e: self.redo_image())
