@@ -1,18 +1,65 @@
 '''
 This file is responsible for:
-
+ 
 Containing image processing functions using OpenCV.
-
+ 
 Taking input images (usually as NumPy arrays) and returning processed images.
-
+ 
 Encapsulating specific image operations like grayscale conversion, edge detection, blurring, etc.
-
+ 
 Keeping the image processing logic independent from the GUI.
 '''
-from utils.imports import * 
-from utils.utils import * 
-from utils.customMessageBox import *
-from PIL import ImageEnhance
+from utils.imports import (
+    cv,
+    np,
+    Image,
+    ImageEnhance,
+    ImageFilter,
+    messagebox,
+)
+from utils.utils import check_image_loaded
+from utils.customMessageBox import ctk_get_value
+
+
+def _ensure_image_copy(image):
+    """Return a mutable copy of the image or None if not loaded."""
+    if not check_image_loaded(image):
+        return None
+    return image.copy()
+
+
+def adjust_brightness_with_factor(image, brightness_factor: float):
+    """Adjust brightness using a provided factor (non-interactive helper)."""
+    new_image = _ensure_image_copy(image)
+    if new_image is None:
+        return image
+    image_pil = Image.fromarray(cv.cvtColor(new_image, cv.COLOR_BGR2RGB))
+    enhancer = ImageEnhance.Brightness(image_pil)
+    enhanced_image = enhancer.enhance(brightness_factor)
+    return cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
+
+
+def adjust_saturation_with_factor(image, saturation_factor: float):
+    """Adjust saturation using a provided factor (non-interactive helper)."""
+    new_image = _ensure_image_copy(image)
+    if new_image is None:
+        return image
+    image_pil = Image.fromarray(cv.cvtColor(new_image, cv.COLOR_BGR2RGB))
+    enhancer = ImageEnhance.Color(image_pil)
+    enhanced_image = enhancer.enhance(saturation_factor)
+    return cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
+
+
+def adjust_contrast_with_factor(image, contrast_factor: float):
+    """Adjust contrast using a provided factor (non-interactive helper)."""
+    new_image = _ensure_image_copy(image)
+    if new_image is None:
+        return image
+    image_pil = Image.fromarray(cv.cvtColor(new_image, cv.COLOR_BGR2RGB))
+    enhancer = ImageEnhance.Contrast(image_pil)
+    enhanced_image = enhancer.enhance(contrast_factor)
+    return cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
+
 
 # all functions will return an adjusted image
 def adjust_brightness(image):
@@ -40,8 +87,8 @@ def adjust_saturation(image):
         image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
         enhancer = ImageEnhance.Color(image_pil)
         enhanced_image = enhancer.enhance(saturation_factor)
-        new_image = cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
-    return new_image
+        newImage = cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
+    return newImage
 
 def adjust_contrast(image):
     print("Adjusting Contrast")
@@ -54,8 +101,8 @@ def adjust_contrast(image):
         image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
         enhancer = ImageEnhance.Contrast(image_pil)
         enhanced_image = enhancer.enhance(contrast_factor)
-        new_image = cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
-    return new_image
+        newImage = cv.cvtColor(np.array(enhanced_image), cv.COLOR_RGB2BGR)
+    return newImage
 
 def apply_glitch(image):
     print("Adding a glitch")
@@ -64,6 +111,8 @@ def apply_glitch(image):
     newImage = image.copy()
     # glitch_factor = simpledialog.askinteger("Input", "Enter Glitch Intensity (1 - 50)", minvalue=1, maxvalue=50)
     glitch_factor = ctk_get_value(input="Enter Glitch Intensity (1 - 50)",minvalue=1, maxvalue=50, type=int)
+    if not glitch_factor:
+        return newImage
     height, width, _ = newImage.shape
     for i in range(glitch_factor):
          offset = np.random.randint(-10, 11, size=3)
@@ -77,13 +126,20 @@ def apply_blur(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    # blur_factor = simpledialog.askfloat("Input", "Enter Blur Factor (1 to 10)", minvalue=1, maxvalue=10)
     blur_factor = ctk_get_value(input="Enter Blur Factor (1 to 10)",minvalue=1, maxvalue=10, type=int)
     if blur_factor:
-        image_pil = Image.fromarray(cv.cvtColor(newImage, cv.COLOR_BGR2RGB))
-        blurred_image = image_pil.filter(ImageFilter.GaussianBlur(radius=blur_factor))
-        newImage = cv.cvtColor(np.array(blurred_image), cv.COLOR_RGB2BGR)
+        newImage = apply_blur_with_radius(newImage, blur_factor)
     return newImage
+
+
+def apply_blur_with_radius(image, blur_radius: float):
+    """Apply Gaussian blur with a provided radius (non-interactive helper)."""
+    new_image = _ensure_image_copy(image)
+    if new_image is None:
+        return image
+    image_pil = Image.fromarray(cv.cvtColor(new_image, cv.COLOR_BGR2RGB))
+    blurred_image = image_pil.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+    return cv.cvtColor(np.array(blurred_image), cv.COLOR_RGB2BGR)
 
 def apply_sharpen(image):
     print("Apply sharpen")
@@ -122,13 +178,22 @@ def apply_noise(image):
     if not check_image_loaded(image):
             return
     newImage = image.copy()
-    # noise_factor = simpledialog.askfloat("Input", "Enter Noise Factor (From 0 to 1)", minvalue=0.0, maxvalue=1.0)
     noise_factor = ctk_get_value(input="Enter Noise Factor (From 0 to 1)", minvalue=0.0, maxvalue=1.0, type=float)
     if noise_factor is not None:
-        noise = np.random.randint(0,noise_factor, newImage.shape, dtype=np.uint8)
-        newImage = cv.add(newImage, noise)
-    messagebox.showinfo("Success", "Noise Applied")
+        newImage = apply_noise_with_intensity(newImage, noise_factor)
+        messagebox.showinfo("Success", "Noise Applied")
     return newImage
+
+
+def apply_noise_with_intensity(image, noise_factor: float):
+    """Apply noise using a provided intensity factor (non-interactive helper)."""
+    new_image = _ensure_image_copy(image)
+    if new_image is None:
+        return image
+    clamped = max(0.0, min(noise_factor, 1.0))
+    max_noise = int(max(1, clamped * 50))
+    noise = np.random.randint(0, max_noise + 1, new_image.shape, dtype=np.uint8)
+    return cv.add(new_image, noise)
 
 def apply_vignette(image):
     if not check_image_loaded(image):
@@ -161,6 +226,25 @@ def apply_retro_filter(image):
     newImage = cv.cvtColor(np.array(image_pil), cv.COLOR_RGB2BGR)
     return newImage
 
+
+def apply_smart_enhance(image):
+    """
+    Human-tuned enhancement preset:
+    gentle contrast & saturation boost, light sharpening.
+    """
+    if not check_image_loaded(image):
+            return
+    enhanced = image.copy()
+    # Slight contrast lift
+    enhanced = adjust_contrast_with_factor(enhanced, 1.1)
+    # Slight saturation lift
+    enhanced = adjust_saturation_with_factor(enhanced, 1.05)
+    # Light sharpen
+    enhanced_pil = Image.fromarray(cv.cvtColor(enhanced, cv.COLOR_BGR2RGB))
+    enhanced_pil = enhanced_pil.filter(ImageFilter.SHARPEN)
+    enhanced = cv.cvtColor(np.array(enhanced_pil), cv.COLOR_RGB2BGR)
+    return enhanced
+
 def apply_pencil(image):
     if not check_image_loaded(image):
             return
@@ -170,6 +254,6 @@ def apply_pencil(image):
     blurred = cv.GaussianBlur(inverted, (21,21), sigmaX=0, sigmaY=0)
     inverted_blur = cv.bitwise_not(blurred)
     sketch = cv.divide(gray, inverted_blur, scale = 256)
-    return sketch
+    return cv.cvtColor(sketch, cv.COLOR_GRAY2BGR)
 
 
