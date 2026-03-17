@@ -1,6 +1,6 @@
 import numpy as np
 
-from processing.image_filters import (
+from processing.filters import (
     adjust_brightness_with_factor,
     adjust_contrast_with_factor,
     apply_blur_with_radius,

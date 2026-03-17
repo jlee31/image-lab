@@ -1,5 +1,5 @@
 from utils.imports import cv, os, messagebox
-from processing.image_filters import apply_retro_filter, apply_sharpen, apply_blur_with_radius
+from processing.filters import apply_retro_filter, apply_sharpen, apply_blur_with_radius
 
 
 def _iter_image_files(folder_path: str):
