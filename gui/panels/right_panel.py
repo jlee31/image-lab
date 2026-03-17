@@ -12,6 +12,7 @@ To add a new filter:
 
 from utils.imports import ctk
 from utils.utils import check_image_loaded
+from processing.ml import remove_background
 from processing.filters import (
     adjust_brightness_with_factor,
     adjust_contrast_with_factor,
@@ -49,6 +50,9 @@ class RightPanelMixin:
 
         filt_content = self._collapsible_card(self.right_panel, "▼   Creative Filters")
         self._build_creative_filters(filt_content)
+
+        ai_content = self._collapsible_card(self.right_panel, "AI Features")
+        self._build_ai_features(ai_content)
 
     def _collapsible_card(self, parent, title):
         """Return the content frame of a collapsible white card."""
@@ -157,7 +161,43 @@ class RightPanelMixin:
                 corner_radius=8, height=36, anchor="w",
             ).pack(fill="x", pady=(0, 6))
 
+    def _build_ai_features(self, parent):
+        self._ai_status = ctk.CTkLabel(
+            parent, text="", font=("Arial", 11),
+            text_color=self.TEXT_MUTED,
+        )
+        self._ai_status.pack(anchor="w", pady=(0, 4))
+
+        self._ai_buttons = []
+
+        features = [
+            ("Remove Background", self.cmd_remove_background),
+        ]
+        for name, cmd in features:
+            btn = ctk.CTkButton(
+                parent, text=name, command=cmd,
+                fg_color=self.ACCENT, hover_color="#6D28D9",
+                text_color="white",
+                corner_radius=8, height=36, anchor="w",
+            )
+            btn.pack(fill="x", pady=(0, 6))
+            self._ai_buttons.append(btn)
+
     # ── One-click filter commands ─────────────────────────────────────────────
+
+    def cmd_remove_background(self):
+        def on_start():
+            self._ai_status.configure(text="Processing...")
+            for b in self._ai_buttons:
+                b.configure(state="disabled")
+
+        def on_done():
+            self._ai_status.configure(text="")
+            for b in self._ai_buttons:
+                b.configure(state="normal")
+
+        self._apply_ml(remove_background, "Remove Background",
+                       on_start=on_start, on_done=on_done)
 
     def cmd_adjust_brightness(self): self._apply(adjust_brightness,  "Brightness (dialog)")
     def cmd_adjust_contrast(self):   self._apply(adjust_contrast,    "Contrast (dialog)")

@@ -59,8 +59,16 @@ class CanvasMixin:
         if w < 10 or h < 10:
             w, h = 700, 450
 
-        image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-        image_pil = Image.fromarray(image_rgb)
+        if image.ndim == 3 and image.shape[2] == 4:
+            # BGRA: composite over a checkerboard to show transparency
+            rgba = image[:, :, [2, 1, 0, 3]]
+            fg = Image.fromarray(rgba, "RGBA")
+            checker = _make_checkerboard(fg.size)
+            checker.paste(fg, mask=fg.split()[3])
+            image_pil = checker.convert("RGB")
+        else:
+            image_rgb = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+            image_pil = Image.fromarray(image_rgb)
 
         img_w, img_h = image_pil.size
         if self.display_mode.get() == "fit-width":
@@ -75,3 +83,17 @@ class CanvasMixin:
         self.canvas.delete("all")
         self.canvas.create_image(w // 2, h // 2, anchor="center", image=image_tk)
         self.canvas.image_tk = image_tk  # keep reference to prevent GC
+
+
+def _make_checkerboard(size, tile=16):
+    """Return a grey checkerboard PIL image of the given size."""
+    w, h = size
+    board = Image.new("RGB", (w, h))
+    light, dark = (220, 220, 220), (170, 170, 170)
+    for y in range(0, h, tile):
+        for x in range(0, w, tile):
+            color = light if (x // tile + y // tile) % 2 == 0 else dark
+            for py in range(y, min(y + tile, h)):
+                for px in range(x, min(x + tile, w)):
+                    board.putpixel((px, py), color)
+    return board

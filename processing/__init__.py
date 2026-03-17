@@ -1,4 +1,4 @@
-from .image_filters import (
+from .filters import (
     adjust_brightness,
     adjust_saturation,
     adjust_contrast,
