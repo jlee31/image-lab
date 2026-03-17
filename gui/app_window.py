@@ -1,3 +1,5 @@
+import threading
+import numpy as np
 from utils.imports import cv, tk, ctk, messagebox
 from utils.utils import load_image_via_dialog, save_image_via_dialog, check_image_loaded
 from utils.customMessageBox import ctk_messagebox
@@ -197,14 +199,64 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
         if not check_image_loaded(self.current_image):
             return
         self.add_to_undo_stack()
-        result = fn(self.current_image)
-        if result is None:
-            self.undo_stack.pop()
-            return
+
+        # If the current image has an alpha channel, apply the filter only to
+        # the BGR channels and then reattach the alpha.
+        if self.current_image.ndim == 3 and self.current_image.shape[2] == 4:
+            alpha = self.current_image[:, :, 3:4]
+            result = fn(self.current_image[:, :, :3])
+            if result is None:
+                self.undo_stack.pop()
+                return
+            result = np.concatenate([result, alpha], axis=2)
+        else:
+            result = fn(self.current_image)
+            if result is None:
+                self.undo_stack.pop()
+                return
+
         self.current_image = result
         self.show_image(self.current_image)
         self.preview_base_image = None
         self.add_history_entry(label)
+
+    def _apply_ml(self, fn, label, on_start=None, on_done=None):
+        """Run an ML filter in a background thread to keep the UI responsive."""
+        if not check_image_loaded(self.current_image):
+            return
+        self.add_to_undo_stack()
+        image_copy = self.current_image.copy()
+
+        if on_start:
+            on_start()
+
+        def _run():
+            try:
+                result = fn(image_copy)
+            except Exception as e:
+                msg = str(e)
+                self.app.after(0, lambda: self._ml_error(msg, on_done))
+                return
+            self.app.after(0, lambda: self._ml_finish(result, label, on_done))
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _ml_finish(self, result, label, on_done=None):
+        if result is None:
+            self.undo_stack.pop()
+        else:
+            self.current_image = result
+            self.show_image(self.current_image)
+            self.preview_base_image = None
+            self.add_history_entry(label)
+        if on_done:
+            on_done()
+
+    def _ml_error(self, message, on_done=None):
+        self.undo_stack.pop()
+        ctk_messagebox(title="Error", message=message)
+        if on_done:
+            on_done()
 
     # ── Misc ──────────────────────────────────────────────────────────────────
 
