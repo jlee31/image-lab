@@ -67,6 +67,21 @@ temp/
 run_macos.sh
 *.sh
 
+# ML model weights cache
+.imagelab/
+~/.imagelab/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Future API / web build artifacts
+__pycache__/
+node_modules/
+web/dist/
+web/.next/
+
 # Image files (if you don't want to track test images)
 # *.jpg
 # *.jpeg
