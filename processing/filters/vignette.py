@@ -17,8 +17,8 @@ def apply_vignette(image):
         kernel_x = cv.getGaussianKernel(cols, cols / 2)
         kernel_y = cv.getGaussianKernel(rows, rows / 2)
         mask = kernel_y * kernel_x.T
-        mask = 255 * mask / (1 - intensity)
-        mask = mask * intensity + (1 - intensity)
+        mask = mask / mask.max()                    # normalise to [0, 1]
+        mask = 1.0 - intensity * (1.0 - mask)       # 1 at centre, (1-intensity) at edges
         new_image = new_image * mask[:, :, np.newaxis]
         new_image = np.clip(new_image, 0, 255).astype(np.uint8)
     return new_image

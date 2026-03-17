@@ -51,6 +51,12 @@ class CanvasMixin:
 
     def _on_display_mode_change(self):
         if self.current_image is not None:
+            # The canvas may be on a hidden tab, so schedule the re-render
+            # for after the event loop has a chance to update geometry.
+            self.app.after(50, lambda: self._deferred_show())
+
+    def _deferred_show(self):
+        if self.current_image is not None:
             self.show_image(self.current_image)
 
     def show_image(self, image):
@@ -87,13 +93,11 @@ class CanvasMixin:
 
 def _make_checkerboard(size, tile=16):
     """Return a grey checkerboard PIL image of the given size."""
+    import numpy as np
     w, h = size
-    board = Image.new("RGB", (w, h))
-    light, dark = (220, 220, 220), (170, 170, 170)
-    for y in range(0, h, tile):
-        for x in range(0, w, tile):
-            color = light if (x // tile + y // tile) % 2 == 0 else dark
-            for py in range(y, min(y + tile, h)):
-                for px in range(x, min(x + tile, w)):
-                    board.putpixel((px, py), color)
-    return board
+    ys = np.arange(h) // tile
+    xs = np.arange(w) // tile
+    grid = (ys[:, None] + xs[None, :]) % 2  # 0 = light, 1 = dark
+    arr = np.where(grid[:, :, None], 170, 220).astype(np.uint8)
+    arr = np.broadcast_to(arr, (h, w, 3)).copy()
+    return Image.fromarray(arr, "RGB")

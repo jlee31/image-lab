@@ -47,9 +47,13 @@ def ctk_get_value(input, minvalue, maxvalue, type):
     value = dialog.get_input()
     if not value:
         return
-    value = type(value)
+    try:
+        value = type(value)
+    except (ValueError, TypeError):
+        ctk_messagebox("Error", "Please enter a valid number")
+        return None
     if value < minvalue or value > maxvalue:
-        ctk_messagebox("Error", "Please enter a valid value")
+        ctk_messagebox("Error", f"Please enter a value between {minvalue} and {maxvalue}")
         return None
     else:
         return value

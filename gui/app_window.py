@@ -67,6 +67,10 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
         self._create_settings_tab()
         self._bind_shortcuts()
 
+        # Re-render the canvas when the user switches back to the Editor tab
+        # (e.g. after changing display mode in Settings).
+        self.tabview.configure(command=self._on_tab_change)
+
         self.app.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.app.mainloop()
 
@@ -259,6 +263,10 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
             on_done()
 
     # ── Misc ──────────────────────────────────────────────────────────────────
+
+    def _on_tab_change(self, tab_name):
+        if tab_name == self.TAB_EDITOR and self.current_image is not None:
+            self.app.after(50, lambda: self.show_image(self.current_image))
 
     def open_tutorial(self):
         pass
