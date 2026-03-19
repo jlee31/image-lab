@@ -46,13 +46,13 @@ def _load_image_generic():
         print(f"Generic file dialog error: {e}")
         return None
 
-def save_image_via_dialog(image):
+def save_image_via_dialog(image, success_popups_enabled=None, error_dialogs_enabled=None):
     if platform.system() == "Darwin":
-        return _save_image_macos(image)
+        return _save_image_macos(image, success_popups_enabled, error_dialogs_enabled)
     else:
-        return _save_image_generic(image)
+        return _save_image_generic(image, success_popups_enabled, error_dialogs_enabled)
 
-def _save_image_macos(image):
+def _save_image_macos(image, success_popups_enabled=None, error_dialogs_enabled=None):
     """macOS-specific image saving"""
     try:
         file_path = filedialog.asksaveasfilename(
@@ -61,12 +61,14 @@ def _save_image_macos(image):
         )
         if file_path:
             cv.imwrite(filename=file_path, img=image)
-            messagebox.showinfo("Success", "Image Saved Successfully")
+            if success_popups_enabled is None or success_popups_enabled.get():
+                messagebox.showinfo("Success", "Image Saved Successfully")
     except Exception as e:
         print(f"macOS save dialog error: {e}")
-        messagebox.showerror("Error", "Failed to save image")
+        if error_dialogs_enabled is None or error_dialogs_enabled.get():
+            messagebox.showerror("Error", "Failed to save image")
 
-def _save_image_generic(image):
+def _save_image_generic(image, success_popups_enabled=None, error_dialogs_enabled=None):
     """Generic image saving for other platforms"""
     try:
         file_path = filedialog.asksaveasfilename(
@@ -79,10 +81,12 @@ def _save_image_generic(image):
             ])
         if file_path:
             cv.imwrite(filename=file_path, img=image)
-            messagebox.showinfo("Success", "Image Saved Successfully")
+            if success_popups_enabled is None or success_popups_enabled.get():
+                messagebox.showinfo("Success", "Image Saved Successfully")
     except Exception as e:
         print(f"Generic save dialog error: {e}")
-        messagebox.showerror("Error", "Failed to save image")
+        if error_dialogs_enabled is None or error_dialogs_enabled.get():
+            messagebox.showerror("Error", "Failed to save image")
 
 def push_undo(undo_stack, redo_stack, current_image, max_stack_size=20):
     undo_stack.append(current_image.copy())
@@ -102,8 +106,9 @@ def redo(undo_stack, redo_stack, current_image):
         return redo_stack.pop()
     return current_image  
 
-def check_image_loaded(image):
+def check_image_loaded(image, error_dialogs_enabled=None):
     if image is None:
-        messagebox.showerror("Error", "No image loaded.")
+        if error_dialogs_enabled is None or error_dialogs_enabled.get():
+            messagebox.showerror("Error", "No image loaded.")
         return False
     return True

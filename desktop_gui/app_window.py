@@ -3,7 +3,7 @@ import numpy as np
 from utils.imports import cv, tk, ctk, messagebox
 from utils.utils import load_image_via_dialog, save_image_via_dialog, check_image_loaded
 from utils.customMessageBox import ctk_messagebox
-from gui.panels import (
+from .panels import (
     SidebarMixin,
     CanvasMixin,
     RightPanelMixin,
@@ -51,8 +51,8 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
         self._history_visible   = False
 
         # ── Settings vars (created here so panels can reference them) ─────────
-        self.show_success_toasts = tk.BooleanVar(value=True)
-        self.show_error_dialogs  = tk.BooleanVar(value=True)
+        self.success_popups_enabled = tk.BooleanVar(value=True)
+        self.error_dialogs_enabled  = tk.BooleanVar(value=True)
         self.display_mode        = tk.StringVar(value="fit-window")
         self.tts_enabled         = tk.BooleanVar(value=False)
 
@@ -77,21 +77,22 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
     # ── Header ────────────────────────────────────────────────────────────────
 
     def _create_header(self):
-        header = ctk.CTkFrame(self.app, fg_color=self.CARD, corner_radius=0, height=72)
+        header = ctk.CTkFrame(self.app, fg_color=self.CARD, corner_radius=0)
         header.pack(fill="x", side="top")
-        header.pack_propagate(False)
 
         icon_bg = ctk.CTkFrame(header, fg_color=self.ACCENT, width=44, height=44, corner_radius=10)
-        icon_bg.pack(side="left", padx=(20, 10), pady=14)
+        icon_bg.pack(side="left", padx=(20, 10), pady=16)
         icon_bg.pack_propagate(False)
         ctk.CTkLabel(icon_bg, text="🖼", font=("Arial", 22), text_color="white").pack(expand=True)
 
         text_col = ctk.CTkFrame(header, fg_color="transparent")
-        text_col.pack(side="left", pady=14)
-        ctk.CTkLabel(text_col, text="Image Lab",
-                     font=("Arial", 19, "bold"), text_color=self.TEXT).pack(anchor="w")
-        ctk.CTkLabel(text_col, text="Professional photo editing suite",
-                     font=("Arial", 11), text_color=self.TEXT_MUTED).pack(anchor="w")
+        text_col.pack(side="left", pady=16)
+        tk.Label(text_col, text="Image Lab",
+                 font=("Arial", 19, "bold"), fg=self.TEXT, bg=self.CARD,
+                 borderwidth=0).pack(anchor="w", pady=(0, 3))
+        tk.Label(text_col, text="Professional Photo Editing Suite",
+                 font=("Arial", 11), fg=self.TEXT_MUTED, bg=self.CARD,
+                 borderwidth=0).pack(anchor="w", pady=(0, 3))
 
         ctk.CTkFrame(self.app, fg_color=self.BORDER, height=1, corner_radius=0).pack(fill="x")
 
@@ -147,8 +148,8 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
     def load_image(self):
         file_path = load_image_via_dialog()
         if file_path:
-            self.original_image     = cv.imread(filename=file_path)
-            self.current_image      = self.original_image.copy()
+            self.original_image = cv.imread(filename=file_path)
+            self.current_image = self.original_image.copy()
             self.preview_base_image = None
             self._show_canvas()           # CanvasMixin: swap in the canvas
             self.show_image(self.current_image)
@@ -161,7 +162,7 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
         if self.current_image is None:
             ctk_messagebox(title="Error", message="Please select an image first.")
             return
-        save_image_via_dialog(self.current_image)
+        save_image_via_dialog(self.current_image, self.success_popups_enabled, self.error_dialogs_enabled)
 
     def reset_image(self):
         if self.current_image is None:
@@ -200,7 +201,7 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
     # ── Generic filter applier (used by all cmd_* methods in RightPanelMixin) ─
 
     def _apply(self, fn, label):
-        if not check_image_loaded(self.current_image):
+        if not check_image_loaded(self.current_image, self.error_dialogs_enabled):
             return
         self.add_to_undo_stack()
 
@@ -226,7 +227,7 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
 
     def _apply_ml(self, fn, label, on_start=None, on_done=None):
         """Run an ML filter in a background thread to keep the UI responsive."""
-        if not check_image_loaded(self.current_image):
+        if not check_image_loaded(self.current_image, self.error_dialogs_enabled):
             return
         self.add_to_undo_stack()
         image_copy = self.current_image.copy()
@@ -264,7 +265,8 @@ class AppWindow(SidebarMixin, CanvasMixin, RightPanelMixin, BatchTabMixin, Setti
 
     # ── Misc ──────────────────────────────────────────────────────────────────
 
-    def _on_tab_change(self, tab_name):
+    def _on_tab_change(self):
+        tab_name = self.tabview.get()
         if tab_name == self.TAB_EDITOR and self.current_image is not None:
             self.app.after(50, lambda: self.show_image(self.current_image))
 
