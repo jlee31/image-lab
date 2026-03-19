@@ -25,10 +25,10 @@ class SettingsTabMixin:
                      font=("Arial", 14, "bold"), text_color=self.TEXT
                      ).grid(row=0, column=0, sticky="w", pady=(0, 5))
         ctk.CTkCheckBox(frame, text="Show success popups (e.g., after save/apply)",
-                        variable=self.show_success_toasts
+                        variable=self.success_popups_enabled
                         ).grid(row=1, column=0, sticky="w", pady=2)
         ctk.CTkCheckBox(frame, text="Show error dialogs",
-                        variable=self.show_error_dialogs
+                        variable=self.error_dialogs_enabled
                         ).grid(row=2, column=0, sticky="w", pady=2)
 
         # Display mode

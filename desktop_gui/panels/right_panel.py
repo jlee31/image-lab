@@ -61,10 +61,10 @@ class RightPanelMixin:
         is_open = [True]
 
         hdr = ctk.CTkFrame(card, fg_color="transparent")
-        hdr.pack(fill="x", padx=14, pady=(12, 0))
+        hdr.pack(fill="x", padx=14, pady=12)
 
         ctk.CTkLabel(hdr, text=title,
-                     font=("Arial", 13, "bold"), text_color=self.TEXT).pack(side="left")
+                     font=("Arial", 13, "bold"), text_color=self.TEXT).pack(side="left", anchor="center")
 
         toggle_btn = ctk.CTkButton(
             hdr, text="∧", width=28, height=28,
@@ -72,10 +72,10 @@ class RightPanelMixin:
             text_color=self.TEXT_MUTED, font=("Arial", 15, "bold"),
             corner_radius=6,
         )
-        toggle_btn.pack(side="right")
+        toggle_btn.pack(side="right", anchor="center")
 
         content = ctk.CTkFrame(card, fg_color="transparent")
-        content.pack(fill="x", padx=14, pady=(6, 14))
+        content.pack(fill="x", padx=14, pady=(0, 14))
 
         def toggle():
             if is_open[0]:
@@ -216,7 +216,7 @@ class RightPanelMixin:
     # ── Slider apply (committed on mouse-release) ─────────────────────────────
 
     def apply_brightness_from_slider(self):
-        if not check_image_loaded(self.current_image):
+        if not check_image_loaded(self.current_image, self.error_dialogs_enabled):
             return
         self.add_to_undo_stack()
         factor = self.brightness_slider.get()
@@ -226,7 +226,7 @@ class RightPanelMixin:
         self.add_history_entry(f"Brightness: {factor:.2f}")
 
     def apply_contrast_from_slider(self):
-        if not check_image_loaded(self.current_image):
+        if not check_image_loaded(self.current_image, self.error_dialogs_enabled):
             return
         self.add_to_undo_stack()
         factor = self.contrast_slider.get()
@@ -236,7 +236,7 @@ class RightPanelMixin:
         self.add_history_entry(f"Contrast: {factor:.2f}")
 
     def apply_saturation_from_slider(self):
-        if not check_image_loaded(self.current_image):
+        if not check_image_loaded(self.current_image, self.error_dialogs_enabled):
             return
         self.add_to_undo_stack()
         factor = self.saturation_slider.get()
@@ -246,7 +246,7 @@ class RightPanelMixin:
         self.add_history_entry(f"Saturation: {factor:.2f}")
 
     def apply_blur_from_slider(self):
-        if not check_image_loaded(self.current_image):
+        if not check_image_loaded(self.current_image, self.error_dialogs_enabled):
             return
         radius = self.blur_slider.get()
         if radius <= 0:
@@ -258,7 +258,7 @@ class RightPanelMixin:
         self.add_history_entry(f"Blur: {radius:.1f}px")
 
     def apply_noise_from_slider(self):
-        if not check_image_loaded(self.current_image):
+        if not check_image_loaded(self.current_image, self.error_dialogs_enabled):
             return
         intensity = self.noise_slider.get()
         if intensity <= 0:
