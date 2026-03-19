@@ -1,4 +1,4 @@
-from utils.imports import cv, np
+from utils.cv_imports import cv, np
 from utils.utils import check_image_loaded
 from utils.customMessageBox import ctk_get_value
 

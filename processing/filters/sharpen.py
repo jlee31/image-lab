@@ -1,4 +1,4 @@
-from utils.imports import cv, np, Image, ImageFilter
+from utils.cv_imports import cv, np, Image, ImageFilter
 from utils.utils import check_image_loaded
 
 
