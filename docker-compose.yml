@@ -1,0 +1,9 @@
+services:
+  image-lab:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./web:/app/web
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
