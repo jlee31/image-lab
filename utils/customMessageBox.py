@@ -1,4 +1,7 @@
-import customtkinter as ctk
+try:
+    import customtkinter as ctk
+except ImportError:
+    ctk = None
 
 def ctk_messagebox(title, message):
     popup = ctk.CTkToplevel()
