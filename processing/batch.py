@@ -1,4 +1,6 @@
-from utils.imports import cv, os, messagebox
+import os
+
+from utils.cv_imports import cv
 from processing.filters import apply_retro_filter, apply_sharpen, apply_blur_with_radius
 
 
@@ -16,8 +18,7 @@ def process_folder_basic(input_folder: str, output_folder: str, apply_retro: boo
     Apply a simple pipeline (retro / sharpen / blur) to all images in a folder.
     """
     if not os.path.isdir(input_folder):
-        messagebox.showerror("Error", "Input folder does not exist.")
-        return
+        raise FileNotFoundError(f"Input folder does not exist: {input_folder}")
     os.makedirs(output_folder, exist_ok=True)
 
     for path in _iter_image_files(input_folder):
