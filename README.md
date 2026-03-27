@@ -41,13 +41,17 @@ pip3 install -r requirements.txt
 Run the app:
 
 ```bash
+# For Desktop GUI
 python3 main.py
 ```
 
-### Tests
+``` bash
+# For the Web component
 
-Basic tests for image filters are in `tests/test_image_filters.py`. To run them:
+uvicorn api.main:app
 
-```bash
-pytest
+# Or use Docker
+docker compose up
+# then access localhost:8000
 ```
+
