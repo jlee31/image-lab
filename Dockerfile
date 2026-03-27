@@ -8,8 +8,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python deps
-COPY requirements.txt requirements-api.txt ./
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-api.txt
+COPY requirements-api.txt ./
+RUN pip install --no-cache-dir -r requirements-api.txt
 
 # Copy application code
 COPY api/ api/
