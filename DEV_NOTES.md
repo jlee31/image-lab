@@ -1,5 +1,86 @@
 # Dev Notes
 
+## How the API and Backend Work
+
+### The big picture
+
+The backend sits between the web browser and the image processing code. The browser can't run Python, so instead it sends an image over HTTP, Python processes it, and Python sends the image back.
+
+```text
+Browser  →  HTTP POST (image file)  →  FastAPI  →  processing/  →  HTTP response (PNG)  →  Browser
+```
+
+### FastAPI basics
+
+FastAPI is a Python web framework. You define routes — a route is just a URL + HTTP method + Python function. When a request hits that URL, FastAPI calls your function.
+
+```python
+@router.post("/brightness")          # URL: POST /filters/brightness
+async def brightness(
+    file: UploadFile = File(...),    # the uploaded image
+    factor: float = Query(1.0),      # ?factor=1.2 in the URL
+):
+    image = _decode_image(await file.read())
+    return _encode_image(adjust_brightness_with_factor(image, factor))
+```
+
+That's the entire endpoint. FastAPI handles parsing the request, validating the factor parameter, and formatting the response.
+
+### HTTP methods
+
+- GET — fetch/read something (no body). e.g. GET / returns the web page.
+- POST — send data to the server to do something with. All the filter endpoints are POST because you're uploading an image.
+
+### How image data travels
+
+The browser can't send raw numpy arrays over HTTP, so images are encoded/decoded at the boundary.
+
+Request (browser → API):
+The browser sends the image as multipart/form-data — the same format as an HTML file input. In JS that's `new FormData()` + `form.append("file", blob)`.
+
+Inside the API:
+
+```python
+def _decode_image(data: bytes) -> np.ndarray:
+    arr = np.frombuffer(data, np.uint8)        # raw bytes → numpy array
+    return cv2.imdecode(arr, cv2.IMREAD_COLOR) # → BGR image
+```
+
+Now it's a normal numpy array and the processing functions work on it exactly the same as the desktop app does.
+
+Response (API → browser):
+
+```python
+def _encode_image(image: np.ndarray) -> StreamingResponse:
+    image_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    buf = io.BytesIO()          # in-memory file
+    image_pil.save(buf, "PNG")  # write PNG bytes into it
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="image/png")
+```
+
+It writes PNG bytes into an in-memory buffer and streams that back. The browser receives it as a blob.
+
+### Routers
+
+Instead of putting all routes in one file, FastAPI lets you split them into routers (like mini-apps) and include them. api/routers/filters.py has `router = APIRouter(prefix="/filters")` — every route defined there automatically gets /filters/ prepended. Then api/main.py does `app.include_router(filters.router)` to attach it.
+
+### Static files
+
+The web frontend is just HTML/CSS/JS files on disk. FastAPI serves them with:
+
+```python
+app.mount("/static", StaticFiles(directory="web"), name="static")
+```
+
+Any file in web/ is now accessible at /static/filename. The HTML page itself is served at / via a normal route that returns FileResponse("web/index.html").
+
+### Uvicorn
+
+FastAPI is just Python code — it needs a server to actually listen for HTTP connections. uvicorn is that server. When you run `uvicorn api.main:app`, uvicorn starts listening on a port, receives raw TCP connections, parses HTTP, and hands requests to FastAPI.
+
+---
+
 ## Things I Want to Have
 
 - Some type of text to speech
