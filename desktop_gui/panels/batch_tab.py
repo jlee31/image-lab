@@ -106,13 +106,17 @@ class BatchTabMixin:
             ctk_messagebox(title="Error", message="Please choose both input and output folders.")
             return
 
-        process_folder_basic(
-            input_folder=input_folder,
-            output_folder=output_folder,
-            apply_retro=self.batch_retro_var.get(),
-            apply_sharpen_flag=self.batch_sharpen_var.get(),
-            blur_radius=self.batch_blur_slider.get() if self.batch_blur_var.get() else None,
-        )
+        try:
+            process_folder_basic(
+                input_folder=input_folder,
+                output_folder=output_folder,
+                apply_retro=self.batch_retro_var.get(),
+                apply_sharpen_flag=self.batch_sharpen_var.get(),
+                blur_radius=self.batch_blur_slider.get() if self.batch_blur_var.get() else None,
+            )
+        except FileNotFoundError as e:
+            ctk_messagebox(title="Error", message=str(e))
+            return
         ctk_messagebox(title="Batch complete", message="Finished processing images in the folder.")
 
     # ── Recent files ──────────────────────────────────────────────────────────
