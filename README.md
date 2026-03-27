@@ -32,26 +32,32 @@ Desktop photo editor made with OpenCV, Pillow, and CustomTkinter.
 
 ### How to run the app
 
-Install dependencies:
+**Desktop GUI:**
 
 ```bash
-pip3 install -r requirements.txt
-```
-
-Run the app:
-
-```bash
-# For Desktop GUI
+pip install -r requirements-gui.txt
 python3 main.py
 ```
 
-``` bash
-# For the Web component
+**Web / API:**
 
+```bash
+pip install -r requirements-api.txt
 uvicorn api.main:app
+# then open http://localhost:8000
+```
 
-# Or use Docker
+**Or run with Docker:**
+
+```bash
 docker compose up
-# then access localhost:8000
+# then open http://localhost:8000
+```
+
+**Run tests:**
+
+```bash
+pip install -r requirements-api.txt
+pytest
 ```
 

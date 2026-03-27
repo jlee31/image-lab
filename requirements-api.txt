@@ -1,8 +1,20 @@
-# ── FastAPI backend ───────────────────────────────────────────────────────────
-# Install on top of requirements.txt:  pip install -r requirements-api.txt
+# API + ML + testing — pip install -r requirements-api.txt
+opencv-contrib-python==4.12.0.88
+numpy==2.2.6
+Pillow==10.4.0
 
--r requirements.txt
-
+# API server
 fastapi
 uvicorn[standard]
-python-multipart   # required for file upload endpoints
+python-multipart
+
+# ML features
+rembg
+onnxruntime
+transformers
+torch
+
+# Testing
+pytest
+pytest-cov
+httpx

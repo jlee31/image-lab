@@ -1,8 +1,0 @@
-# ── Dev / testing ─────────────────────────────────────────────────────────────
-# Install everything:  pip install -r requirements-dev.txt
-
--r requirements.txt
-
-pytest
-pytest-cov
-httpx        # for testing FastAPI endpoints with TestClient
