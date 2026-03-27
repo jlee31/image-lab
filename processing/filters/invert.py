@@ -1,9 +1,6 @@
 from utils.cv_imports import cv
-from utils.utils import check_image_loaded
+from ._base import _ensure_image_copy
 
 
 def apply_invert(image):
-    """Invert all pixel values (bitwise NOT)."""
-    if not check_image_loaded(image):
-        return
-    return cv.bitwise_not(image.copy())
+    return cv.bitwise_not(_ensure_image_copy(image))

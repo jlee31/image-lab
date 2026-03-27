@@ -1,7 +1,7 @@
 import threading
 import numpy as np
 from utils.imports import cv, tk, ctk, messagebox
-from utils.utils import load_image_via_dialog, save_image_via_dialog, check_image_loaded
+from utils.gui_utils import load_image_via_dialog, save_image_via_dialog, check_image_loaded
 from utils.customMessageBox import ctk_messagebox
 from .panels import (
     SidebarMixin,

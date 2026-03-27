@@ -1,19 +1,9 @@
 from utils.cv_imports import np
-from utils.utils import check_image_loaded
-from utils.customMessageBox import ctk_get_value
+from ._base import _ensure_image_copy
 
 
-def apply_glitch(image):
-    """Prompt for a glitch intensity and apply random horizontal channel shifts."""
-    if not check_image_loaded(image):
-        return
-    new_image = image.copy()
-    intensity = ctk_get_value(
-        input="Enter Glitch Intensity (1 - 50)",
-        minvalue=1, maxvalue=50, type=int,
-    )
-    if not intensity:
-        return new_image
+def apply_glitch(image, intensity: int = 10):
+    new_image = _ensure_image_copy(image)
     height, width, _ = new_image.shape
     for _ in range(intensity):
         offset = np.random.randint(-10, 11, size=3)
