@@ -1,17 +1,11 @@
 from utils.cv_imports import cv, np, Image, ImageFilter
-from utils.utils import check_image_loaded
+from ._base import _ensure_image_copy
 from .contrast import adjust_contrast_with_factor
 from .saturation import adjust_saturation_with_factor
 
 
 def apply_smart_enhance(image):
-    """
-    Preset enhancement: gentle contrast + saturation boost, then light sharpening.
-    Based on human-tuned values for a natural-looking result.
-    """
-    if not check_image_loaded(image):
-        return
-    enhanced = image.copy()
+    enhanced = _ensure_image_copy(image)
     enhanced = adjust_contrast_with_factor(enhanced, 1.1)
     enhanced = adjust_saturation_with_factor(enhanced, 1.05)
     enhanced_pil = Image.fromarray(cv.cvtColor(enhanced, cv.COLOR_BGR2RGB))

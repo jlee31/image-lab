@@ -1,24 +1,14 @@
 from utils.cv_imports import cv, np
-from utils.utils import check_image_loaded
-from utils.customMessageBox import ctk_get_value
+from ._base import _ensure_image_copy
 
 
-def apply_vignette(image):
-    """Prompt the user for a vignette intensity and apply a Gaussian vignette mask."""
-    if not check_image_loaded(image):
-        return
-    new_image = image.copy()
-    intensity = ctk_get_value(
-        input="Enter Vignette Intensity (0.0 to 1.0)",
-        minvalue=0.0, maxvalue=1.0, type=float,
-    )
-    if intensity:
-        rows, cols = new_image.shape[:2]
-        kernel_x = cv.getGaussianKernel(cols, cols / 2)
-        kernel_y = cv.getGaussianKernel(rows, rows / 2)
-        mask = kernel_y * kernel_x.T
-        mask = mask / mask.max()                    # normalise to [0, 1]
-        mask = 1.0 - intensity * (1.0 - mask)       # 1 at centre, (1-intensity) at edges
-        new_image = new_image * mask[:, :, np.newaxis]
-        new_image = np.clip(new_image, 0, 255).astype(np.uint8)
-    return new_image
+def apply_vignette(image, intensity: float = 0.5):
+    new_image = _ensure_image_copy(image)
+    rows, cols = new_image.shape[:2]
+    kernel_x = cv.getGaussianKernel(cols, cols / 2)
+    kernel_y = cv.getGaussianKernel(rows, rows / 2)
+    mask = kernel_y * kernel_x.T
+    mask = mask / mask.max()
+    mask = 1.0 - intensity * (1.0 - mask)
+    new_image = new_image * mask[:, :, np.newaxis]
+    return np.clip(new_image, 0, 255).astype(np.uint8)

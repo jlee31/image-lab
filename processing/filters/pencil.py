@@ -1,12 +1,9 @@
 from utils.cv_imports import cv
-from utils.utils import check_image_loaded
+from ._base import _ensure_image_copy
 
 
 def apply_pencil(image):
-    """Convert the image to a pencil-sketch look using divide blending."""
-    if not check_image_loaded(image):
-        return
-    new_image = image.copy()
+    new_image = _ensure_image_copy(image)
     gray = cv.cvtColor(new_image, cv.COLOR_BGR2GRAY)
     inverted = cv.bitwise_not(gray)
     blurred = cv.GaussianBlur(inverted, (21, 21), sigmaX=0, sigmaY=0)

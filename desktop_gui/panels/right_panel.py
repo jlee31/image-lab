@@ -10,8 +10,8 @@ To add a new filter:
   3. Add a row to the `filters` list in _build_creative_filters()
 """
 
-from utils.imports import ctk
-from utils.utils import check_image_loaded
+from utils.gui_imports import ctk
+from utils.gui_utils import check_image_loaded
 from processing.ml import remove_background
 from processing.filters import (
     adjust_brightness_with_factor,
@@ -19,19 +19,24 @@ from processing.filters import (
     adjust_saturation_with_factor,
     apply_blur_with_radius,
     apply_noise_with_intensity,
-    adjust_brightness,
-    adjust_contrast,
-    adjust_saturation,
     apply_glitch,
-    apply_blur,
     apply_sharpen,
     apply_pixels,
     apply_invert,
-    apply_noise,
     apply_vignette,
     apply_retro_filter,
     apply_pencil,
     apply_smart_enhance,
+)
+from desktop_gui.filter_commands import (
+    adjust_brightness,
+    adjust_contrast,
+    adjust_saturation,
+    apply_blur,
+    apply_noise,
+    apply_glitch_dialog,
+    apply_vignette_dialog,
+    apply_pixels_dialog,
 )
 
 
@@ -202,13 +207,13 @@ class RightPanelMixin:
     def cmd_adjust_brightness(self): self._apply(adjust_brightness,  "Brightness (dialog)")
     def cmd_adjust_contrast(self):   self._apply(adjust_contrast,    "Contrast (dialog)")
     def cmd_adjust_saturation(self): self._apply(adjust_saturation,  "Saturation (dialog)")
-    def cmd_glitch(self):            self._apply(apply_glitch,       "Glitch")
+    def cmd_glitch(self):            self._apply(apply_glitch_dialog,   "Glitch")
     def cmd_blur(self):              self._apply(apply_blur,         "Blur (dialog)")
     def cmd_sharpen(self):           self._apply(apply_sharpen,      "Sharpen")
-    def cmd_pixels(self):            self._apply(apply_pixels,       "Pixelate")
+    def cmd_pixels(self):            self._apply(apply_pixels_dialog,   "Pixelate")
     def cmd_invert(self):            self._apply(apply_invert,       "Invert")
     def cmd_noise(self):             self._apply(apply_noise,        "Noise (dialog)")
-    def cmd_vignette(self):          self._apply(apply_vignette,     "Vignette")
+    def cmd_vignette(self):          self._apply(apply_vignette_dialog, "Vignette")
     def cmd_retro_filter(self):      self._apply(apply_retro_filter, "Retro filter")
     def cmd_pencil(self):            self._apply(apply_pencil,       "Pencil sketch")
     def cmd_smart_enhance(self):     self._apply(apply_smart_enhance,"Smart Enhance")
