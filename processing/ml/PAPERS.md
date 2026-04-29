@@ -28,7 +28,7 @@ The model weights are downloaded automatically on first use by rembg.
 
 **Paper:** Yang, L. et al. "Depth Anything V2." arXiv, 2024.
 https://arxiv.org/abs/2406.09414
-
+in
 Also see: Ranftl, R. et al. "Towards Robust Monocular Depth Estimation:
 Mixing Datasets for Zero-Shot Cross-Dataset Transfer." TPAMI, 2020.
 https://arxiv.org/abs/1907.01341

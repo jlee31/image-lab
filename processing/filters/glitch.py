@@ -1,4 +1,4 @@
-from utils.cv_imports import np
+import numpy as np
 from ._base import _ensure_image_copy
 
 

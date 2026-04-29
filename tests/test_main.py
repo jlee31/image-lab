@@ -4,14 +4,7 @@ import numpy as np
 import cv2
 import io
 
-from processing.filters import (
-    adjust_brightness_with_factor,
-    adjust_contrast_with_factor,
-    apply_blur_with_radius,
-    apply_smart_enhance,
-)
 
-from test_image_filters import _dummy_image
 
 client = TestClient(app)
 
@@ -28,6 +21,7 @@ def make_test_image() -> bytes:
 
 
 def test_filter():
+    img_bytes = make_test_image()
     response = client.post("/filters/blur", files={"file": ("test.png", io.BytesIO(img_bytes), "image/png")})
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/png"

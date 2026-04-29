@@ -1,6 +1,5 @@
 import tkinter
 import customtkinter
-from tkinter import filedialog
 from tkVideoPlayer import TkinterVideo
 
 def open_video():
@@ -13,16 +12,16 @@ def open_video():
             vid_player.play()
             progress_slider.set(-1)
             play_pause_btn.configure(text="Pause ||")
-        except:
+        except Exception:
             print("Unable to load the file")
 
 def update_duration(event):
     try:
         duration = int(vid_player.video_info()["duration"])
         progress_slider.configure(from_=-1, to=duration, number_of_steps=duration)
-    except:
+    except Exception:
         pass
-    
+
 def seek(value):
     if video_file:
         try:
@@ -30,13 +29,13 @@ def seek(value):
             vid_player.play()
             vid_player.after(50,vid_player.pause)
             play_pause_btn.configure(text="Play ►")
-        except:
+        except Exception:
             pass
     
 def update_scale(event):
     try:
         progress_slider.set(int(vid_player.current_duration()))
-    except:
+    except Exception:
         pass
     
 def play_pause():

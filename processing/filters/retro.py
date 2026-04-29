@@ -1,4 +1,6 @@
-from utils.cv_imports import cv, np, Image, ImageEnhance
+import cv2 as cv
+import numpy as np
+from PIL import Image, ImageEnhance
 from ._base import _ensure_image_copy
 
 
