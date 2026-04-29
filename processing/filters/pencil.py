@@ -1,4 +1,4 @@
-from utils.cv_imports import cv
+import cv2 as cv
 from ._base import _ensure_image_copy
 
 

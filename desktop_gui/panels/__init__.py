@@ -3,3 +3,11 @@ from .canvas_panel  import CanvasMixin
 from .right_panel   import RightPanelMixin
 from .batch_tab     import BatchTabMixin
 from .settings_tab  import SettingsTabMixin
+
+__all__ = [
+    "SidebarMixin",
+    "CanvasMixin",
+    "RightPanelMixin",
+    "BatchTabMixin",
+    "SettingsTabMixin",
+]

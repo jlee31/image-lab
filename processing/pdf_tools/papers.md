@@ -7,3 +7,5 @@
 
 gonna read up on these then use Pillow library to find some image compression tools
 
+https://web.stanford.edu/class/ee384m/Handouts/HowtoReadPaper.pdf
+

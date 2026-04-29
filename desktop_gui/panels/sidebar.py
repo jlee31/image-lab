@@ -4,7 +4,7 @@ gui/panels/sidebar.py
 Left sidebar: Quick Actions, History buttons, View History toggle.
 """
 
-from utils.imports import ctk
+import customtkinter as ctk
 
 
 class SidebarMixin:

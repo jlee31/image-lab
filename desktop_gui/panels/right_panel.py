@@ -10,8 +10,8 @@ To add a new filter:
   3. Add a row to the `filters` list in _build_creative_filters()
 """
 
-from utils.gui_imports import ctk
-from utils.gui_utils import check_image_loaded
+import customtkinter as ctk
+from desktop_gui.utils.file_dialogs import check_image_loaded
 from processing.ml import remove_background
 from processing.filters import (
     adjust_brightness_with_factor,
@@ -19,11 +19,8 @@ from processing.filters import (
     adjust_saturation_with_factor,
     apply_blur_with_radius,
     apply_noise_with_intensity,
-    apply_glitch,
     apply_sharpen,
-    apply_pixels,
     apply_invert,
-    apply_vignette,
     apply_retro_filter,
     apply_pencil,
     apply_smart_enhance,
