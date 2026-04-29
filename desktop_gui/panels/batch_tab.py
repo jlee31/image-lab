@@ -4,7 +4,9 @@ gui/panels/batch_tab.py
 Batch Tools tab: folder selection, pipeline options, recent files list.
 """
 
-from utils.imports import ctk, tk, filedialog
+import tkinter as tk
+from tkinter import filedialog
+import customtkinter as ctk
 from utils.customMessageBox import ctk_messagebox
 
 
@@ -98,7 +100,7 @@ class BatchTabMixin:
     # ── Processing ────────────────────────────────────────────────────────────
 
     def _run_batch_processing(self):
-        from processing.batch import process_folder_basic
+        from pipelines.batch import process_folder_basic
 
         input_folder  = self.batch_input_entry.get().strip()
         output_folder = self.batch_output_entry.get().strip()

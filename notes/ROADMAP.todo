@@ -1,0 +1,37 @@
+# Image Lab — Roadmap (synced with GitHub Issues)
+# Source: plan.md + DEV_NOTES.md + ruff check
+# Format: [ ] = open, [x] = done.  #N = github issue number.
+
+Phase 1 — Core API & Bugs:
+    [ ] #3  Wire up ML router for /ml/remove-background
+    [ ] #4  Global error handler in api/main.py
+    [ ] #5  Fix web slider bug (compounds on currentBlob)
+    [ ] #6  Register PDF tools + format conversion routers
+
+Phase 2 — Testing & CI:
+    [ ] #21 Ruff cleanup (55 errors — DO FIRST, blocks CI)
+    [ ] #7  API integration tests with FastAPI TestClient
+    [ ] #8  Unit tests for untested filters (noise, glitch, vignette, pixelate, retro, pencil, invert)
+    [ ] #9  GitHub Actions CI (pytest + ruff + docker build)
+    [ ] #10 Ruff config + pre-commit hooks
+
+Phase 3 — ML Features (the resume stuff):
+    [ ] #11 Image classification / auto-tagging (ResNet/EfficientNet, Hands-On ML Ch 14)
+    [ ] #12 Depth-based bokeh (Depth Anything V2)
+    [ ] #13 Super-resolution 4x (Real-ESRGAN)
+    [ ] #14 API rate limiting on ML endpoints
+
+Phase 4 — UX & Polish:
+    [ ] #15 Responsive web layout (media query for mobile)
+    [ ] #16 README before/after screenshots
+    [ ] #17 Before/After comparison slider in desktop GUI
+    [ ] #18 TTS + notification system (Settings panel)
+    [ ] #19 PyInstaller packaging
+    [ ] #20 Performance benchmarks (CPU vs GPU)
+
+# Suggested order:
+# 1. #21 (ruff) — clears the deck
+# 2. #3, #4, #5 — fix what's already half-built
+# 3. #7, #8, #9 — lock quality in with tests + CI
+# 4. #11 — first resume-worthy ML feature
+# 5. everything else as time/interest allows

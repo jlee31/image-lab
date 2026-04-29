@@ -1,6 +1,6 @@
 import os
 
-from utils.cv_imports import cv
+import cv2 as cv
 from processing.filters import apply_retro_filter, apply_sharpen, apply_blur_with_radius
 
 

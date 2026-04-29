@@ -5,7 +5,9 @@ Centre canvas area: empty state frame and image display.
 """
 
 import tkinter as tk
-from utils.imports import cv, Image, ImageTk, ctk
+import cv2 as cv
+import customtkinter as ctk
+from PIL import Image, ImageTk
 
 
 class CanvasMixin:
