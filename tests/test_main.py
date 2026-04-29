@@ -4,8 +4,6 @@ import numpy as np
 import cv2
 import io
 
-
-
 client = TestClient(app)
 
 def test_root_returns_200():
@@ -26,4 +24,10 @@ def test_filter():
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/png"
     
-    
+# Testing the ML Model
+
+def test_background_removal():
+    img_bytes = make_test_image()
+    response = client.post("/ml/remove-background", files={"file": ("test.png", io.BytesIO(img_bytes), "image/png")})
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"

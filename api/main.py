@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from api.routers import filters
+from api.routers import ml
 
 app = FastAPI(
     title="Image Lab API",
@@ -19,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(filters.router)
+app.include_router(ml.router)
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
