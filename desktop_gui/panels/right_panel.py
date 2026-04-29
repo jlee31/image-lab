@@ -11,7 +11,7 @@ To add a new filter:
 """
 
 import customtkinter as ctk
-from utils.gui_utils import check_image_loaded
+from desktop_gui.utils.file_dialogs import check_image_loaded
 from processing.ml import remove_background
 from processing.filters import (
     adjust_brightness_with_factor,

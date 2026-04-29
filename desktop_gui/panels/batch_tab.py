@@ -7,7 +7,7 @@ Batch Tools tab: folder selection, pipeline options, recent files list.
 import tkinter as tk
 from tkinter import filedialog
 import customtkinter as ctk
-from utils.customMessageBox import ctk_messagebox
+from desktop_gui.utils.dialogs import ctk_messagebox
 
 
 class BatchTabMixin:
