@@ -1,7 +1,7 @@
 import platform
 import os
+from tkinter import filedialog, messagebox
 import cv2 as cv
-from utils.gui_imports import filedialog, messagebox
 
 
 def check_image_loaded(image, error_dialogs_enabled=None):
@@ -27,7 +27,7 @@ def _load_image_macos():
             if os.path.splitext(file_path)[1].lower() in valid_extensions:
                 return file_path
             else:
-                messagebox.showerror("Error", f"Unsupported file type")
+                messagebox.showerror("Error", "Unsupported file type")
         return None
     except Exception as e:
         print(f"macOS file dialog error: {e}")

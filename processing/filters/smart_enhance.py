@@ -1,4 +1,6 @@
-from utils.cv_imports import cv, np, Image, ImageFilter
+import cv2 as cv
+import numpy as np
+from PIL import Image, ImageFilter
 from ._base import _ensure_image_copy
 from .contrast import adjust_contrast_with_factor
 from .saturation import adjust_saturation_with_factor

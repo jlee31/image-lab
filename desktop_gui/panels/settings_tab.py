@@ -4,7 +4,7 @@ gui/panels/settings_tab.py
 Settings tab: notification toggles, display mode, TTS placeholder.
 """
 
-from utils.imports import ctk
+import customtkinter as ctk
 
 
 class SettingsTabMixin:

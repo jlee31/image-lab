@@ -6,8 +6,8 @@ These belong in desktop_gui because they require a GUI (CTkInputDialog).
 The API uses the pure _with_factor / _with_radius functions directly.
 """
 
-from utils.customMessageBox import ctk_get_value
-from utils.gui_utils import check_image_loaded
+from desktop_gui.utils.dialogs import ctk_get_value
+from desktop_gui.utils.file_dialogs import check_image_loaded
 from processing.filters import (
     adjust_brightness_with_factor,
     adjust_contrast_with_factor,
