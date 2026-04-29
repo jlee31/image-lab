@@ -124,14 +124,14 @@ async function applySlider(name, rawValue) {
 
 // ── One-click filter ────────────────────────────────────────────────────────
 
-async function applyFilter(name) {
+async function applyFilter(name, prefix = "filters") {
   if (!currentBlob) return alert("Load an image first.");
   pushUndo();
 
   const form = new FormData();
   form.append("file", currentBlob, "image.png");
 
-  await sendFilter(API + "/filters/" + name, form, capitalize(name));
+  await sendFilter(API + '/' + prefix + '/' + name, form, capitalize(name));
 }
 
 // ── API call helper ─────────────────────────────────────────────────────────

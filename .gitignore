@@ -77,7 +77,6 @@ run_macos.sh
 htmlcov/
 
 # Future API / web build artifacts
-__pycache__/
 node_modules/
 web/dist/
 web/.next/
