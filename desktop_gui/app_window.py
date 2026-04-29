@@ -4,8 +4,8 @@ import tkinter as tk
 from tkinter import messagebox
 import cv2 as cv
 import customtkinter as ctk
-from utils.gui_utils import load_image_via_dialog, save_image_via_dialog, check_image_loaded
-from utils.customMessageBox import ctk_messagebox
+from desktop_gui.utils.file_dialogs import load_image_via_dialog, save_image_via_dialog, check_image_loaded
+from desktop_gui.utils.dialogs import ctk_messagebox
 from .panels import (
     SidebarMixin,
     CanvasMixin,
