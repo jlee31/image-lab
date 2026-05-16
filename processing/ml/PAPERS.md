@@ -24,7 +24,7 @@ The model weights are downloaded automatically on first use by rembg.
 
 ---
 
-## Depth-Based Bokeh (Portrait Mode) -- not yet implemented
+## Depth-Based Bokeh (Portrait Mode) (todo)
 
 **Paper:** Yang, L. et al. "Depth Anything V2." arXiv, 2024.
 https://arxiv.org/abs/2406.09414
@@ -43,7 +43,7 @@ heavy blur, near pixels stay sharp, simulating a camera bokeh effect.
 
 ---
 
-## Super-Resolution (4x Upscaling) -- not yet implemented
+## Super-Resolution (4x Upscaling) (todo)
 
 **Paper:** Wang, X. et al. "Real-ESRGAN: Training Real-World Blind
 Super-Resolution with Pure Synthetic Data." ICCV Workshops, 2021.
@@ -63,7 +63,7 @@ Model weights are downloaded to ~/.imagelab/models/ on first use.
 
 ---
 
-## Object Removal via Inpainting -- not yet implemented
+## Object Removal via Inpainting (todo)
 
 **Paper:** Suvorov, R. et al. "Resolution-robust Large Mask Inpainting
 with Fourier Convolutions." WACV, 2022.
@@ -79,7 +79,7 @@ convolutions to capture long-range spatial context across the image.
 
 ---
 
-## B&W Photo Colorization -- not yet implemented
+## B&W Photo Colorization (todo)
 
 **Paper:** Zhang, R., Isola, P., Efros, A. "Colorful Image Colorization."
 ECCV, 2016.

@@ -18,5 +18,33 @@ plan / my process:
 4) get back probability scores
 5) return top 5 labels
 
+to-do
+add dependencies
+implement classify(image) which returns a (label, confidence)
+    step a
+    call the model with weights (torchvision.models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V2))
+    call .eval()
+
+    step b
+    preprocessing
+    weights = ResNet50_Weights.IMAGENET1K_V2
+    preprocess = weights.transforms()
+
+    step c - run the model
+    with torch.no_grad():
+        output = model(batch) 
+    probabilities = torch.nn.functional.softmax(output[0], dim=0) # turning raw scores into probabilities
+    top5_prob, top5_idx = torch.topk(probabilities, 5) # find 5 top probabilities
+
+    step d - turn the indexes into weights
+    categories = weights.meta["categories"]
+    [{"label": categories[idx], "confidence": prob.item()} 
+        for idx, prob in zip(top5_idx, top5_prob)] # create a list of index, and confidence
+    
+add POST /ml/classify
+add frontend button
+add test
+update apers
+
 '''
 
