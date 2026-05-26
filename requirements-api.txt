@@ -13,6 +13,7 @@ rembg
 onnxruntime
 transformers
 torch
+torchvision
 
 # Testing
 pytest

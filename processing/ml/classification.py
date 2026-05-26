@@ -1,50 +1,66 @@
-# ! classification 
-# using knowledge from hands on machine learning
-'''
+"""
+processing/ml/classification.py
+--------------------------------
+Image classification via ResNet50 pretrained on ImageNet (1000 classes).
 
-How image classification works (simplified):
+How it works (Hands-On ML, Ch. 14):
+A pretrained CNN learned to extract visual features layer-by-layer — edges →
+textures → shapes → objects — from ImageNet's 1.2M labeled images. We load
+those weights, preprocess the image into the format the network expects, run
+inference, softmax the logits into probabilities, and return the top-k labels.
 
-A pretrained CNN (like ResNet) was trained on millions of labeled images (ImageNet — 1000 categories). It learned to extract visual features: edges → textures → shapes → objects, layer by layer. When you feed it a new image, it outputs probability scores for each category. You take the top few as your tags.
+This is transfer learning by reuse: no training step, just inference.
 
-Transfer learning means you use that pretrained model as-is (or fine-tune it on your own data). You skip the expensive training step entirely — just load the weights, preprocess the image, and run inference.
+Returns a list of {"label": str, "confidence": float}, sorted high → low.
+"""
 
-'''
-'''
+from __future__ import annotations
 
-plan / my process:
-1) user will upload image
-2) resized to proper image format
-3) run it through pretrained model
-4) get back probability scores
-5) return top 5 labels
+from functools import lru_cache
+from typing import Any
 
-to-do
-add dependencies
-implement classify(image) which returns a (label, confidence)
-    step a
-    call the model with weights (torchvision.models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V2))
-    call .eval()
+import numpy as np
 
-    step b
-    preprocessing
+
+@lru_cache(maxsize=1)
+def _load_model() -> tuple[Any, Any, list[str]]:
+    """Load ResNet50 + IMAGENET1K_V2 weights once and cache."""
+    try:
+        import torch  # noqa: F401  — surfaces a clear ImportError if missing
+        from torchvision.models import ResNet50_Weights, resnet50
+    except ImportError as e:
+        raise ImportError(
+            "torch/torchvision are required for classification.\n"
+            "Run: pip install torch torchvision"
+        ) from e
+
     weights = ResNet50_Weights.IMAGENET1K_V2
+    model = resnet50(weights=weights)
+    model.eval()
+    categories = list(weights.meta["categories"])
+    return model, weights, categories
+
+
+def classify(image: np.ndarray, top_k: int = 5) -> list[dict]:
+    """
+    Classify a BGR uint8 image (OpenCV convention) and return top-k labels.
+    """
+    import torch
+    from PIL import Image
+
+    model, weights, categories = _load_model()
     preprocess = weights.transforms()
 
-    step c - run the model
+    # BGR uint8 -> RGB PIL -> preprocessed tensor batch
+    pil_rgb = Image.fromarray(image[:, :, ::-1])
+    batch = preprocess(pil_rgb).unsqueeze(0)
+
     with torch.no_grad():
-        output = model(batch) 
-    probabilities = torch.nn.functional.softmax(output[0], dim=0) # turning raw scores into probabilities
-    top5_prob, top5_idx = torch.topk(probabilities, 5) # find 5 top probabilities
+        logits = model(batch)
+    probs = torch.nn.functional.softmax(logits[0], dim=0)
+    top_probs, top_idx = torch.topk(probs, top_k)
 
-    step d - turn the indexes into weights
-    categories = weights.meta["categories"]
-    [{"label": categories[idx], "confidence": prob.item()} 
-        for idx, prob in zip(top5_idx, top5_prob)] # create a list of index, and confidence
-    
-add POST /ml/classify
-add frontend button
-add test
-update apers
-
-'''
-
+    return [
+        {"label": categories[int(idx)], "confidence": float(prob)}
+        for idx, prob in zip(top_idx, top_probs)
+    ]

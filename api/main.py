@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from api.routers import filters
 from api.routers import ml
+from api.routers import security
 
 
 # Create Logger
@@ -72,6 +73,7 @@ if WEB_DIR.exists():
 
 app.include_router(filters.router)
 app.include_router(ml.router)
+app.include_router(security.router)
 
 # Route 
 

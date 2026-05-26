@@ -30,6 +30,18 @@ Desktop photo editor made with OpenCV, Pillow, and CustomTkinter.
   - Cmd/Ctrl+B: Apply blur
   - Cmd/Ctrl+E: Smart Enhance
 
+- **Security tab — Adversarial ML pen-test** (`POST /security/fgsm-attack`)
+  - Pen-tests the ResNet50 image classifier using **FGSM** (Goodfellow et al., 2015).
+  - The endpoint runs an untargeted attack: it computes the gradient of the
+    cross-entropy loss with respect to the input pixels, then nudges each
+    pixel by `epsilon * sign(grad)` — bounded by an L∞ budget so the change
+    stays imperceptible to a human.
+  - Returns the model's top-5 prediction *before* and *after* the attack,
+    whether the attack flipped the top-1 label (`fooled`), the actual L∞
+    distance, and the adversarial image as base64-encoded PNG.
+  - Default `epsilon = 0.01`. Higher epsilon = more visible perturbation but
+    higher success rate.
+
 ### How to run the app
 
 **Desktop GUI:**
