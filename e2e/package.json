@@ -1,0 +1,13 @@
+{
+  "name": "image-lab-e2e",
+  "version": "1.0.0",
+  "description": "End-to-end UI tests for the Image Lab web app (CodeceptJS + Playwright)",
+  "scripts": {
+    "test": "codeceptjs run --steps"
+  },
+  "devDependencies": {
+    "codeceptjs": "^3.6.10",
+    "form-data": "^4.0.5",
+    "playwright": "^1.49.1"
+  }
+}

@@ -23,6 +23,8 @@ from processing.filters import (
 router = APIRouter(prefix="/filters", tags=["Filters"])
 
 
+# Encoding and Decoding Images
+
 def _decode_image(data: bytes) -> np.ndarray:
     arr = np.frombuffer(data, np.uint8)
     image = cv2.imdecode(arr, cv2.IMREAD_COLOR)
